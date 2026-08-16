@@ -13,6 +13,7 @@ export default async function HomePage() {
       <h1>TuGuíaMaestra</h1>
       <p>Directorio de mueblistas y carpinteros de confianza en Santiago.</p>
       <p><a href="/solicitar">→ Pedir presupuesto (formulario conectado a Supabase)</a></p>
+      <p><a href="/registro">→ Registrar mi taller (login + registro real)</a></p>
 
       <h2 style={{ marginTop: 40 }}>Categorías</h2>
 
