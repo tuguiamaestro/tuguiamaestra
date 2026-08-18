@@ -175,7 +175,7 @@ function PanelAdmin({ adminEmail }) {
               <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>{t.descripcion}</p>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" onClick={() => rechazar(t)}>Rechazar</button>
+              <button type="button" className="btn-ghost" onClick={() => rechazar(t)}>Rechazar</button>
               <button type="button" onClick={() => aprobar(t)}>Aprobar</button>
             </div>
           </div>
