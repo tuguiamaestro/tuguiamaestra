@@ -12,6 +12,7 @@ export default async function HomePage() {
     <main className="wrap">
       <h1>TuGuíaMaestra</h1>
       <p>Directorio de mueblistas y carpinteros de confianza en Santiago.</p>
+      <p><a href="/listado">→ Ver talleres (listado con filtros reales)</a></p>
       <p><a href="/solicitar">→ Pedir presupuesto (formulario conectado a Supabase)</a></p>
       <p><a href="/registro">→ Registrar mi taller (login + registro real)</a></p>
       <p><a href="/admin">→ Panel admin (aprobar talleres)</a></p>
@@ -52,4 +53,3 @@ export default async function HomePage() {
     </main>
   );
 }
-
