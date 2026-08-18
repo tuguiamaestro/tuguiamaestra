@@ -15,6 +15,7 @@ export default async function HomePage() {
       <p><a href="/listado">→ Ver talleres (listado con filtros reales)</a></p>
       <p><a href="/solicitar">→ Pedir presupuesto (formulario conectado a Supabase)</a></p>
       <p><a href="/registro">→ Registrar mi taller (login + registro real)</a></p>
+      <p><a href="/panel">→ Panel de mi taller (ver solicitudes)</a></p>
       <p><a href="/admin">→ Panel admin (aprobar talleres)</a></p>
 
       <h2 style={{ marginTop: 40 }}>Categorías</h2>
@@ -53,3 +54,4 @@ export default async function HomePage() {
     </main>
   );
 }
+
