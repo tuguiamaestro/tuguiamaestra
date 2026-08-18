@@ -193,7 +193,7 @@ function PanelTaller({ tallerId, userEmail }) {
             </div>
             {l.estado === 'nuevo' && (
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={() => actualizarLead(l.id, 'descartado')}>Descartar</button>
+                <button type="button" className="btn-ghost" onClick={() => actualizarLead(l.id, 'descartado')}>Descartar</button>
                 <button type="button" onClick={() => actualizarLead(l.id, 'aceptado')}>Ver contacto</button>
               </div>
             )}
@@ -203,3 +203,4 @@ function PanelTaller({ tallerId, userEmail }) {
     </main>
   );
 }
+
