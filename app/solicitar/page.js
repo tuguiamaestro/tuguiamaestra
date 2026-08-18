@@ -1,10 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function SolicitarPage() {
+  return (
+    <Suspense fallback={<main className="wrap"><p>Cargando…</p></main>}>
+      <SolicitarContent />
+    </Suspense>
+  );
+}
+
+function SolicitarContent() {
+  const searchParams = useSearchParams();
+  const tallerIdDirecto = searchParams.get('taller');
+
   const [categorias, setCategorias] = useState([]);
+  const [tallerDirecto, setTallerDirecto] = useState(null);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -28,7 +41,16 @@ export default function SolicitarPage() {
       }
     }
     cargarCategorias();
-  }, []);
+
+    if (tallerIdDirecto) {
+      supabase
+        .from('talleres')
+        .select('id, nombre')
+        .eq('id', tallerIdDirecto)
+        .single()
+        .then(({ data }) => setTallerDirecto(data || null));
+    }
+  }, [tallerIdDirecto]);
 
   function actualizarCampo(campo, valor) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -44,7 +66,9 @@ export default function SolicitarPage() {
     }
 
     setEnviando(true);
-    const { error: insertError } = await supabase.from('solicitudes').insert([form]);
+    const { error: insertError } = await supabase
+      .from('solicitudes')
+      .insert([{ ...form, taller_id_directo: tallerIdDirecto || null }]);
     setEnviando(false);
 
     if (insertError) {
@@ -72,6 +96,11 @@ export default function SolicitarPage() {
   return (
     <main className="wrap">
       <h1>Pedir presupuesto</h1>
+      {tallerDirecto && (
+        <p className="status-ok">
+          Esta solicitud se enviará directo a <strong>{tallerDirecto.nombre}</strong>.
+        </p>
+      )}
       <p>Este formulario escribe directo en tu base de datos de Supabase.</p>
 
       <form onSubmit={enviarSolicitud} style={{ maxWidth: 480, marginTop: 24 }}>
