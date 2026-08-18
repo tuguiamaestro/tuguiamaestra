@@ -10,13 +10,11 @@ export default async function HomePage() {
 
   return (
     <main className="wrap">
-      <h1>TuGuíaMaestra</h1>
-      <p>Directorio de mueblistas y carpinteros de confianza en Santiago.</p>
-      <p><a href="/listado">→ Ver talleres (listado con filtros reales)</a></p>
-      <p><a href="/solicitar">→ Pedir presupuesto (formulario conectado a Supabase)</a></p>
-      <p><a href="/registro">→ Registrar mi taller (login + registro real)</a></p>
-      <p><a href="/panel">→ Panel de mi taller (ver solicitudes)</a></p>
-      <p><a href="/admin">→ Panel admin (aprobar talleres)</a></p>
+      <h1>Encuentra al maestro justo para tu mueble</h1>
+      <p style={{ maxWidth: '52ch', opacity: 0.8 }}>
+        Conectamos a personas que necesitan muebles a medida —cocinas, closets,
+        baños— con talleres y carpinteros verificados de Santiago.
+      </p>
 
       <h2 style={{ marginTop: 40 }}>Categorías</h2>
 
@@ -35,14 +33,14 @@ export default async function HomePage() {
           </p>
           <div className="cat-grid">
             {categorias.map((c) => (
-              <div className="cat-card" key={c.id}>
+              <a href="/listado" className="cat-card" key={c.id} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="icon">{c.icono}</div>
                 <h3>{c.nombre}</h3>
                 <p>
                   ${c.precio_min?.toLocaleString('es-CL')} – $
                   {c.precio_max?.toLocaleString('es-CL')}
                 </p>
-              </div>
+              </a>
             ))}
           </div>
         </>
