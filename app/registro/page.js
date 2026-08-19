@@ -151,13 +151,24 @@ function TallerForm({ user }) {
     }
 
     // 2. Guardar especialidades y comunas de cobertura
-    await supabase.from('talleres_categorias').insert(
+    const { error: errCats } = await supabase.from('talleres_categorias').insert(
       catsSeleccionadas.map((categoria_id) => ({ taller_id: taller.id, categoria_id }))
     );
+    if (errCats) {
+      setEnviando(false);
+      setError('El taller se creó, pero no se pudieron guardar las especialidades: ' + errCats.message);
+      return;
+    }
+
     if (comunasSeleccionadas.length > 0) {
-      await supabase.from('talleres_comunas').insert(
+      const { error: errComunas } = await supabase.from('talleres_comunas').insert(
         comunasSeleccionadas.map((comuna) => ({ taller_id: taller.id, comuna }))
       );
+      if (errComunas) {
+        setEnviando(false);
+        setError('El taller se creó, pero no se pudieron guardar las comunas de cobertura: ' + errComunas.message);
+        return;
+      }
     }
 
     // 3. Actualizar el perfil del usuario a rol 'taller'
@@ -262,3 +273,4 @@ function TallerForm({ user }) {
     </div>
   );
 }
+
