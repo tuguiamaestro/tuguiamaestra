@@ -171,10 +171,20 @@ function TallerForm({ user }) {
       }
     }
 
-    // 3. Actualizar el perfil del usuario a rol 'taller'
+    // 3. Actualizar el perfil del usuario — vincula el taller, pero
+    //    nunca le quita el rol 'admin' si ya lo tenía (evita que un
+    //    admin pierda su rol por registrar un taller con la misma cuenta)
+    const { data: perfilActual } = await supabase
+      .from('perfiles')
+      .select('rol')
+      .eq('id', user.id)
+      .single();
+
+    const nuevoRol = perfilActual?.rol === 'admin' ? 'admin' : 'taller';
+
     await supabase
       .from('perfiles')
-      .update({ rol: 'taller', taller_id: taller.id, nombre: form.nombre })
+      .update({ rol: nuevoRol, taller_id: taller.id, nombre: form.nombre })
       .eq('id', user.id);
 
     setEnviando(false);
@@ -273,4 +283,3 @@ function TallerForm({ user }) {
     </div>
   );
 }
-
