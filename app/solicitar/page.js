@@ -56,6 +56,8 @@ function SolicitarContent() {
     setForm((f) => ({ ...f, [campo]: valor }));
   }
 
+  const [talleresNotificados, setTalleresNotificados] = useState(0);
+
   async function enviarSolicitud(e) {
     e.preventDefault();
     setError(null);
@@ -66,16 +68,44 @@ function SolicitarContent() {
     }
 
     setEnviando(true);
-    const { error: insertError } = await supabase
+
+    // 1. Guardar la solicitud
+    const { data: nuevaSolicitud, error: insertError } = await supabase
       .from('solicitudes')
-      .insert([{ ...form, taller_id_directo: tallerIdDirecto || null }]);
-    setEnviando(false);
+      .insert([{ ...form, taller_id_directo: tallerIdDirecto || null }])
+      .select()
+      .single();
 
     if (insertError) {
+      setEnviando(false);
       setError('No se pudo enviar: ' + insertError.message);
       return;
     }
 
+    // 2. Si NO vino de un perfil específico, hacer el matching automático:
+    //    buscar talleres activos que trabajen esa categoría en esa comuna.
+    if (!tallerIdDirecto) {
+      const { data: candidatos } = await supabase
+        .from('talleres_categorias')
+        .select('taller_id, talleres!inner(id, estado, comuna)')
+        .eq('categoria_id', form.categoria_id)
+        .eq('talleres.estado', 'activo')
+        .eq('talleres.comuna', form.comuna);
+
+      if (candidatos && candidatos.length > 0) {
+        const nuevosLeads = candidatos.map((c) => ({
+          solicitud_id: nuevaSolicitud.id,
+          taller_id: c.taller_id,
+          estado: 'nuevo',
+        }));
+        await supabase.from('leads').insert(nuevosLeads);
+        setTalleresNotificados(candidatos.length);
+      } else {
+        setTalleresNotificados(0);
+      }
+    }
+
+    setEnviando(false);
     setEnviado(true);
   }
 
@@ -83,11 +113,23 @@ function SolicitarContent() {
     return (
       <main className="wrap">
         <h1>✓ Solicitud enviada</h1>
-        <p>
-          Quedó guardada en tu base de datos real de Supabase (tabla{' '}
-          <code>solicitudes</code>). En el sitio final, esto es lo que
-          dispara el matching hacia los talleres correspondientes.
-        </p>
+        {tallerIdDirecto ? (
+          <p className="status-ok">
+            Se envió directo a <strong>{tallerDirecto?.nombre}</strong>.
+          </p>
+        ) : talleresNotificados > 0 ? (
+          <p className="status-ok">
+            Se notificó a {talleresNotificados} taller{talleresNotificados === 1 ? '' : 'es'} que
+            trabajan esa categoría en tu comuna.
+          </p>
+        ) : (
+          <p className="status-error">
+            Tu solicitud quedó guardada, pero hoy no hay ningún taller activo
+            que trabaje esa categoría en esa comuna — apenas se registre uno,
+            podrá verla si vuelves a intentarlo, o puedes buscar directo en{' '}
+            <a href="/listado">el listado</a>.
+          </p>
+        )}
         <a href="/">← Volver al inicio</a>
       </main>
     );
