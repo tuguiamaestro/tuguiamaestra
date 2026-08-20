@@ -141,6 +141,18 @@ function PanelAdmin({ adminEmail }) {
     }
   }
 
+  async function verDocumento(ruta) {
+    const { data, error } = await supabase.storage
+      .from('documentos-talleres')
+      .createSignedUrl(ruta, 60); // el link expira en 60 segundos
+
+    if (error) {
+      setMensaje('No se pudo abrir el documento: ' + error.message);
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  }
+
   async function rechazar(taller) {
     setMensaje(null);
     const { error } = await supabase
@@ -173,6 +185,13 @@ function PanelAdmin({ adminEmail }) {
               <h3 style={{ margin: 0 }}>{t.nombre}</h3>
               <p style={{ margin: '4px 0 0' }}>{t.comuna} · RUT {t.rut}</p>
               <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>{t.descripcion}</p>
+              {t.documento_verificacion_url ? (
+                <button type="button" className="btn-ghost" style={{ marginTop: 8, padding: '6px 12px', fontSize: '0.78rem' }} onClick={() => verDocumento(t.documento_verificacion_url)}>
+                  📄 Ver documento
+                </button>
+              ) : (
+                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--rust)' }}>Sin documento subido</p>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" className="btn-ghost" onClick={() => rechazar(t)}>Rechazar</button>
