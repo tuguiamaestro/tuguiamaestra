@@ -92,6 +92,7 @@ function TallerForm({ user }) {
   const [categorias, setCategorias] = useState([]);
   const [catsSeleccionadas, setCatsSeleccionadas] = useState([]);
   const [comunasSeleccionadas, setComunasSeleccionadas] = useState([]);
+  const [documento, setDocumento] = useState(null);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -134,6 +135,10 @@ function TallerForm({ user }) {
       setError('Elige al menos una especialidad.');
       return;
     }
+    if (!documento) {
+      setError('Sube tu documento de verificación (Inicio de Actividades o cédula).');
+      return;
+    }
 
     setEnviando(true);
 
@@ -149,6 +154,25 @@ function TallerForm({ user }) {
       setError('No se pudo registrar: ' + errTaller.message);
       return;
     }
+
+    // 1b. Subir el documento de verificación a Storage
+    const extension = documento.name.split('.').pop();
+    const rutaArchivo = `${taller.id}/documento.${extension}`;
+
+    const { error: errUpload } = await supabase.storage
+      .from('documentos-talleres')
+      .upload(rutaArchivo, documento, { upsert: true });
+
+    if (errUpload) {
+      setEnviando(false);
+      setError('El taller se creó, pero no se pudo subir el documento: ' + errUpload.message);
+      return;
+    }
+
+    await supabase
+      .from('talleres')
+      .update({ documento_verificacion_url: rutaArchivo, documento_estado: 'pendiente' })
+      .eq('id', taller.id);
 
     // 2. Guardar especialidades y comunas de cobertura
     const { error: errCats } = await supabase.from('talleres_categorias').insert(
@@ -242,6 +266,19 @@ function TallerForm({ user }) {
             value={form.descripcion}
             onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
           />
+        </div>
+
+        <div className="field">
+          <label>Documento de verificación (Inicio de Actividades SII o cédula)</label>
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            onChange={(e) => setDocumento(e.target.files[0] || null)}
+          />
+          <p style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: 6 }}>
+            No se publica tu perfil hasta que revisemos este documento. Solo lo ve un
+            administrador, nunca los clientes.
+          </p>
         </div>
 
         <div className="field">
