@@ -1,4 +1,5 @@
 import './globals.css';
+import AuthStatus from './components/AuthStatus';
 
 export const metadata = {
   title: 'TuGuíaMaestra — Encuentra a tu mueblista',
@@ -17,12 +18,13 @@ export default function RootLayout({ children }) {
             </svg>
             TuGuíaMaestra
           </a>
-          <nav>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
             <a href="/listado">Profesionales</a>
             <a href="/solicitar">Pedir presupuesto</a>
             <a href="/registro">Soy mueblista</a>
             <a href="/panel">Panel taller</a>
             <a href="/admin">Admin</a>
+            <AuthStatus />
           </nav>
         </header>
         {children}
