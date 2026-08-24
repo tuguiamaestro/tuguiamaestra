@@ -110,17 +110,17 @@ function SolicitarContent() {
       setError('Ingresa al menos tu nombre y teléfono.');
       return;
     }
-    if (!telefonoVerificado) {
-      setError('Verifica tu teléfono con el código SMS antes de enviar.');
-      return;
-    }
+    // Nota: la verificación SMS por ahora es opcional (no bloquea el envío)
+    // hasta que la cuenta de Twilio esté activada. Cuando la actives,
+    // vuelve a poner este bloqueo:
+    //   if (!telefonoVerificado) { setError('Verifica tu teléfono...'); return; }
 
     setEnviando(true);
 
     // 1. Guardar la solicitud
     const { data: nuevaSolicitud, error: insertError } = await supabase
       .from('solicitudes')
-      .insert([{ ...form, telefono_verificado: true, taller_id_directo: tallerIdDirecto || null }])
+      .insert([{ ...form, telefono_verificado: telefonoVerificado, taller_id_directo: tallerIdDirecto || null }])
       .select()
       .single();
 
@@ -281,6 +281,7 @@ function SolicitarContent() {
           {errorVerificacion && <p className="status-error">{errorVerificacion}</p>}
           <p style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: 6 }}>
             Esto evita solicitudes falsas — los talleres solo reciben leads con teléfono verificado.
+            Por ahora es opcional (puedes enviar sin verificar) mientras se activa el servicio de SMS.
           </p>
         </div>
 
