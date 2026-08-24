@@ -58,6 +58,50 @@ function SolicitarContent() {
 
   const [talleresNotificados, setTalleresNotificados] = useState(0);
 
+  const [codigoEnviado, setCodigoEnviado] = useState(false);
+  const [telefonoVerificado, setTelefonoVerificado] = useState(false);
+  const [codigo, setCodigo] = useState('');
+  const [verificando, setVerificando] = useState(false);
+  const [errorVerificacion, setErrorVerificacion] = useState(null);
+
+  async function enviarCodigo() {
+    setErrorVerificacion(null);
+    if (!form.cliente_telefono) {
+      setErrorVerificacion('Ingresa tu teléfono primero.');
+      return;
+    }
+    setVerificando(true);
+    const res = await fetch('/api/enviar-codigo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefono: form.cliente_telefono }),
+    });
+    const data = await res.json();
+    setVerificando(false);
+    if (!res.ok) {
+      setErrorVerificacion(data.error || 'No se pudo enviar el código.');
+      return;
+    }
+    setCodigoEnviado(true);
+  }
+
+  async function verificarCodigo() {
+    setErrorVerificacion(null);
+    setVerificando(true);
+    const res = await fetch('/api/verificar-codigo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefono: form.cliente_telefono, codigo }),
+    });
+    const data = await res.json();
+    setVerificando(false);
+    if (!res.ok || !data.verificado) {
+      setErrorVerificacion(data.error || 'Código incorrecto, intenta de nuevo.');
+      return;
+    }
+    setTelefonoVerificado(true);
+  }
+
   async function enviarSolicitud(e) {
     e.preventDefault();
     setError(null);
@@ -66,13 +110,17 @@ function SolicitarContent() {
       setError('Ingresa al menos tu nombre y teléfono.');
       return;
     }
+    if (!telefonoVerificado) {
+      setError('Verifica tu teléfono con el código SMS antes de enviar.');
+      return;
+    }
 
     setEnviando(true);
 
     // 1. Guardar la solicitud
     const { data: nuevaSolicitud, error: insertError } = await supabase
       .from('solicitudes')
-      .insert([{ ...form, taller_id_directo: tallerIdDirecto || null }])
+      .insert([{ ...form, telefono_verificado: true, taller_id_directo: tallerIdDirecto || null }])
       .select()
       .single();
 
@@ -199,9 +247,41 @@ function SolicitarContent() {
           <input
             type="text"
             value={form.cliente_telefono}
-            onChange={(e) => actualizarCampo('cliente_telefono', e.target.value)}
+            onChange={(e) => {
+              actualizarCampo('cliente_telefono', e.target.value);
+              setTelefonoVerificado(false);
+              setCodigoEnviado(false);
+            }}
             placeholder="+56 9 …"
           />
+        </div>
+
+        <div className="field">
+          <label>Verificación de teléfono</label>
+          {telefonoVerificado ? (
+            <p className="status-ok">✓ Teléfono verificado</p>
+          ) : !codigoEnviado ? (
+            <button type="button" className="btn-ghost" onClick={enviarCodigo} disabled={verificando}>
+              {verificando ? 'Enviando…' : 'Enviar código SMS'}
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Código de 6 dígitos"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
+                style={{ maxWidth: 160 }}
+              />
+              <button type="button" className="btn-brass" onClick={verificarCodigo} disabled={verificando}>
+                {verificando ? 'Verificando…' : 'Verificar'}
+              </button>
+            </div>
+          )}
+          {errorVerificacion && <p className="status-error">{errorVerificacion}</p>}
+          <p style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: 6 }}>
+            Esto evita solicitudes falsas — los talleres solo reciben leads con teléfono verificado.
+          </p>
         </div>
 
         <div className="field">
