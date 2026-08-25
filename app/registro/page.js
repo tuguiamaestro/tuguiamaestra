@@ -145,7 +145,7 @@ function TallerForm({ user }) {
     // 1. Crear el taller
     const { data: taller, error: errTaller } = await supabase
       .from('talleres')
-      .insert([{ ...form, owner_id: user.id, estado: 'pendiente' }])
+      .insert([{ ...form, owner_id: user.id, email: user.email, estado: 'pendiente' }])
       .select()
       .single();
 
@@ -210,6 +210,14 @@ function TallerForm({ user }) {
       .from('perfiles')
       .update({ rol: nuevoRol, taller_id: taller.id, nombre: form.nombre })
       .eq('id', user.id);
+
+    // 4. Avisarle al admin que hay un taller nuevo esperando aprobación
+    //    (no bloquea el registro si el correo falla por alguna razón)
+    fetch('/api/notificar-taller-pendiente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tallerNombre: form.nombre, comuna: form.comuna, rut: form.rut }),
+    }).catch(() => {});
 
     setEnviando(false);
     setEnviado(true);
