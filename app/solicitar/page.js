@@ -135,7 +135,7 @@ function SolicitarContent() {
     if (!tallerIdDirecto) {
       const { data: candidatos } = await supabase
         .from('talleres_categorias')
-        .select('taller_id, talleres!inner(id, estado, comuna)')
+        .select('taller_id, talleres!inner(id, estado, comuna, nombre, email)')
         .eq('categoria_id', form.categoria_id)
         .eq('talleres.estado', 'activo')
         .eq('talleres.comuna', form.comuna);
@@ -148,6 +148,21 @@ function SolicitarContent() {
         }));
         await supabase.from('leads').insert(nuevosLeads);
         setTalleresNotificados(candidatos.length);
+
+        // Avisar por correo a cada taller (no bloquea el envío si falla)
+        candidatos.forEach((c) => {
+          fetch('/api/notificar-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tallerEmail: c.talleres.email,
+              tallerNombre: c.talleres.nombre,
+              categoria: form.categoria_id,
+              comuna: form.comuna,
+              descripcion: form.descripcion,
+            }),
+          }).catch(() => {});
+        });
       } else {
         setTalleresNotificados(0);
       }
