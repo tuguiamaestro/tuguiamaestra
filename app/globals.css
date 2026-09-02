@@ -82,11 +82,12 @@ a, button, .swatch, .pro-card, .cat-card, .opt-card, .chip, input, select, texta
 .header-desktop-nav a:hover { opacity: 1; }
 .header-desktop-nav a:hover::after { transform: scaleX(1); }
 
-.menu-toggle {
+button.menu-toggle {
   display: none; flex-direction: column; justify-content: center; gap: 5px;
-  width: 40px; height: 40px; background: none; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  width: 40px; height: 40px; background: none !important; border: 1px solid var(--line); border-radius: var(--radius-sm);
   padding: 0; cursor: pointer;
 }
+button.menu-toggle:hover { background: var(--paper-2) !important; transform: none; }
 .menu-toggle span { width: 18px; height: 2px; background: var(--ink); margin: 0 auto; border-radius: 2px; transition: transform .2s ease, opacity .2s ease; }
 .menu-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .menu-toggle.open span:nth-child(2) { opacity: 0; }
@@ -177,6 +178,12 @@ a, button, .swatch, .pro-card, .cat-card, .opt-card, .chip, input, select, texta
   font-size: 0.64rem; background: var(--brass); color: var(--white);
   padding: 3px 10px; border-radius: 20px; font-weight: 700; margin-left: 6px;
 }
+.cta-section {
+  display: flex; align-items: center; justify-content: space-between; gap: 30px;
+  background: var(--paper-2); border-radius: var(--radius); padding: 40px 44px;
+  flex-wrap: wrap;
+}
+
 .ad-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 20px;
   background: var(--paper-2); border: 1px solid var(--line); color: var(--ink);
