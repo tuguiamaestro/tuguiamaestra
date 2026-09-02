@@ -11,7 +11,6 @@ export default function SiteHeader() {
     { href: '/solicitar', label: 'Pedir presupuesto' },
     { href: '/registro', label: 'Soy mueblista' },
     { href: '/panel', label: 'Panel taller' },
-    { href: '/admin', label: 'Admin' },
   ];
 
   return (
