@@ -12,37 +12,26 @@ export default function PanelTallerPage() {
     async function cargar() {
       const { data: userData } = await supabase.auth.getUser();
       setUser(userData.user || null);
-
       if (userData.user) {
-        const { data: perfilData } = await supabase
-          .from('perfiles')
-          .select('*')
-          .eq('id', userData.user.id)
-          .single();
+        const { data: perfilData } = await supabase.from('perfiles').select('*').eq('id', userData.user.id).single();
         setPerfil(perfilData || null);
       }
       setCargando(false);
     }
     cargar();
-
     const { data: listener } = supabase.auth.onAuthStateChange(() => cargar());
     return () => listener.subscription.unsubscribe();
   }, []);
 
   if (cargando) return <main className="wrap"><p>Cargando…</p></main>;
-
   if (!user) return <LoginForm />;
 
   if (!perfil?.taller_id) {
     return (
       <main className="wrap">
         <h1>Panel de mi taller</h1>
-        <p className="status-error">
-          Esta cuenta ({user.email}) no tiene un taller registrado todavía.
-        </p>
-        <p>
-          <a href="/registro">→ Registrar mi taller</a>
-        </p>
+        <p className="status-error">Esta cuenta ({user.email}) no tiene un taller registrado todavía.</p>
+        <p><a href="/registro">→ Registrar mi taller</a></p>
       </main>
     );
   }
@@ -50,7 +39,6 @@ export default function PanelTallerPage() {
   return <PanelTaller tallerId={perfil.taller_id} userEmail={user.email} />;
 }
 
-/* ---------------- Login simple ---------------- */
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -83,13 +71,12 @@ function LoginForm() {
         <button type="submit" disabled={cargando}>{cargando ? 'Un momento…' : 'Iniciar sesión'}</button>
       </form>
       <p style={{ marginTop: 16, fontSize: '0.85rem', opacity: 0.7 }}>
-        ¿No tienes cuenta todavía? Regístrate en <a href="/registro">/registro</a>.
+        ¿No tienes cuenta? Regístrate en <a href="/registro">/registro</a>.
       </p>
     </main>
   );
 }
 
-/* ---------------- Panel con datos reales ---------------- */
 function PanelTaller({ tallerId, userEmail }) {
   const [taller, setTaller] = useState(null);
   const [directas, setDirectas] = useState([]);
@@ -99,44 +86,24 @@ function PanelTaller({ tallerId, userEmail }) {
 
   async function cargarTodo() {
     setCargando(true);
-
-    const { data: tallerData } = await supabase
-      .from('talleres')
-      .select('*')
-      .eq('id', tallerId)
-      .single();
+    const { data: tallerData } = await supabase.from('talleres').select('*').eq('id', tallerId).single();
     setTaller(tallerData || null);
 
-    const { data: directasData } = await supabase
-      .from('solicitudes')
-      .select('*')
-      .eq('taller_id_directo', tallerId)
-      .order('creado_en', { ascending: false });
+    const { data: directasData } = await supabase.from('solicitudes').select('*').eq('taller_id_directo', tallerId).order('creado_en', { ascending: false });
     setDirectas(directasData || []);
 
-    const { data: leadsData } = await supabase
-      .from('leads')
-      .select('*, solicitudes(*)')
-      .eq('taller_id', tallerId)
-      .order('creado_en', { ascending: false });
+    const { data: leadsData } = await supabase.from('leads').select('*, solicitudes(*)').eq('taller_id', tallerId).order('creado_en', { ascending: false });
     setLeads(leadsData || []);
-
     setCargando(false);
   }
 
-  useEffect(() => {
-    cargarTodo();
-  }, [tallerId]);
+  useEffect(() => { cargarTodo(); }, [tallerId]);
 
   async function actualizarLead(leadId, estado) {
     setMensaje(null);
     const { error } = await supabase.from('leads').update({ estado }).eq('id', leadId);
-    if (error) {
-      setMensaje('Error: ' + error.message);
-    } else {
-      setMensaje(estado === 'aceptado' ? '✓ Lead aceptado.' : 'Lead descartado.');
-      cargarTodo();
-    }
+    if (error) setMensaje('Error: ' + error.message);
+    else { setMensaje(estado === 'aceptado' ? '✓ Lead aceptado.' : 'Lead descartado.'); cargarTodo(); }
   }
 
   if (cargando) return <main className="wrap"><p>Cargando…</p></main>;
@@ -146,18 +113,12 @@ function PanelTaller({ tallerId, userEmail }) {
       <h1>{taller?.nombre || 'Mi taller'}</h1>
       <p className="status-ok">✓ Sesión: {userEmail} · Estado del taller: {taller?.estado}</p>
       {taller?.estado === 'pendiente' && (
-        <p className="status-error">
-          Tu taller todavía está pendiente de aprobación por un administrador — no aparecerá
-          en el listado público hasta que sea aprobado.
-        </p>
+        <p className="status-error">Tu taller está pendiente de aprobación — no aparece en el listado público todavía.</p>
       )}
 
       {mensaje && <p style={{ fontWeight: 600 }}>{mensaje}</p>}
 
       <h2 style={{ marginTop: 32 }}>Solicitudes directas a tu perfil ({directas.length})</h2>
-      <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-        Clientes que pidieron presupuesto directamente desde tu perfil en el listado.
-      </p>
       {directas.length === 0 && <p>Todavía no tienes solicitudes directas.</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
         {directas.map((s) => (
@@ -172,11 +133,6 @@ function PanelTaller({ tallerId, userEmail }) {
       </div>
 
       <h2 style={{ marginTop: 40 }}>Leads asignados por matching ({leads.length})</h2>
-      <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-        Solicitudes generales que el sistema te asignó por categoría/comuna. Hoy esto está
-        vacío porque el motor de matching automático todavía no está construido — es el
-        siguiente paso pendiente grande del proyecto.
-      </p>
       {leads.length === 0 && <p>No tienes leads asignados todavía.</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
         {leads.map((l) => (
@@ -203,4 +159,3 @@ function PanelTaller({ tallerId, userEmail }) {
     </main>
   );
 }
-

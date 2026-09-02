@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 
-export const revalidate = 0; // siempre trae datos frescos (útil mientras pruebas)
+export const revalidate = 0;
 
 export default async function HomePage() {
   const { data: categorias, error } = await supabase
@@ -8,48 +8,58 @@ export default async function HomePage() {
     .select('*')
     .order('nombre');
 
+  const texturas = ['tex-1', 'tex-2', 'tex-3', 'tex-4', 'tex-5', 'tex-6'];
+
   return (
-    <main className="wrap">
-      <h1>Encuentra al maestro justo para tu mueble</h1>
-      <p style={{ maxWidth: '52ch', opacity: 0.8 }}>
-        Conectamos a personas que necesitan muebles a medida —cocinas, closets,
-        baños— con talleres y carpinteros verificados de Santiago.
-      </p>
-
-      <h2 style={{ marginTop: 40 }}>Categorías</h2>
-
-      {error && (
-        <p className="status-error">
-          No se pudo conectar a Supabase: {error.message}. Revisa que las
-          variables de entorno NEXT_PUBLIC_SUPABASE_URL y
-          NEXT_PUBLIC_SUPABASE_ANON_KEY estén bien puestas.
-        </p>
-      )}
-
-      {!error && categorias?.length > 0 && (
-        <>
-          <p className="status-ok">
-            ✓ Conectado a Supabase — mostrando {categorias.length} categorías reales de tu base de datos.
+    <main>
+      <section className="hero wrap">
+        <div>
+          <div className="eyebrow">Directorio de oficio, no de anuncios</div>
+          <h1>Encuentra al maestro justo para tu mueble</h1>
+          <p className="lead">
+            Conectamos a personas que necesitan muebles a medida —cocinas, closets,
+            baños— con talleres y carpinteros verificados de Santiago. Pides
+            presupuesto una vez y responden los que de verdad calzan.
           </p>
-          <div className="cat-grid">
-            {categorias.map((c) => (
-              <a href="/listado" className="cat-card" key={c.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div className="icon">{c.icono}</div>
-                <h3>{c.nombre}</h3>
-                <p>
-                  ${c.precio_min?.toLocaleString('es-CL')} – $
-                  {c.precio_max?.toLocaleString('es-CL')}
-                </p>
+          <form action="/listado" method="get" className="search-box">
+            <input type="text" name="q" placeholder="¿Qué necesitas? Ej: cocina, closet, restauración…" />
+            <button type="submit" className="btn-brass">Buscar</button>
+          </form>
+        </div>
+        <div className="hero-visual">
+          <div className="grain-card a wood-tex tex-1"></div>
+          <div className="grain-card b wood-tex tex-2">
+            <div className="tag">ROBLE · 4.8 ★<br />Talleres verificados</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
+        <h2>Categorías</h2>
+        <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Elige por tipo de mueble.</p>
+
+        {error && (
+          <p className="status-error">
+            No se pudo conectar a Supabase: {error.message}
+          </p>
+        )}
+
+        {!error && categorias?.length > 0 && (
+          <div className="swatch-grid">
+            {categorias.map((c, i) => (
+              <a key={c.id} href={`/listado?categoria=${c.id}`} className="swatch">
+                <div className={`grain wood-tex ${texturas[i % texturas.length]}`}></div>
+                <div className="info">
+                  <div className="name">{c.icono} {c.nombre}</div>
+                  <div className="count">
+                    ${c.precio_min?.toLocaleString('es-CL')} – ${c.precio_max?.toLocaleString('es-CL')}
+                  </div>
+                </div>
               </a>
             ))}
           </div>
-        </>
-      )}
-
-      {!error && categorias?.length === 0 && (
-        <p>No hay categorías en la base de datos todavía.</p>
-      )}
+        )}
+      </section>
     </main>
   );
 }
-

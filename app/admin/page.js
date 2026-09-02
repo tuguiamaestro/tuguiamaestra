@@ -12,44 +12,27 @@ export default function AdminPage() {
     async function cargar() {
       const { data: userData } = await supabase.auth.getUser();
       setUser(userData.user || null);
-
       if (userData.user) {
-        const { data: perfilData } = await supabase
-          .from('perfiles')
-          .select('*')
-          .eq('id', userData.user.id)
-          .single();
+        const { data: perfilData } = await supabase.from('perfiles').select('*').eq('id', userData.user.id).single();
         setPerfil(perfilData || null);
       }
       setCargando(false);
     }
     cargar();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      cargar();
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(() => cargar());
     return () => listener.subscription.unsubscribe();
   }, []);
 
   if (cargando) return <main className="wrap"><p>Cargando…</p></main>;
-
   if (!user) return <LoginForm />;
 
   if (!perfil || perfil.rol !== 'admin') {
     return (
       <main className="wrap">
         <h1>Panel admin</h1>
-        <p className="status-error">
-          Tu cuenta ({user.email}) no tiene rol de administrador todavía.
-        </p>
-        <p>
-          Para convertirte en admin, ve a Supabase → SQL Editor y ejecuta
-          (reemplazando por tu correo):
-        </p>
-        <pre style={{ background: '#fff', padding: 12, border: '1px solid var(--line)', overflowX: 'auto' }}>
-{`update perfiles set rol = 'admin'
-where id = (select id from auth.users where email = '${user.email}');`}
-        </pre>
+        <p className="status-error">Tu cuenta ({user.email}) no tiene rol de administrador todavía.</p>
+        <p>Para convertirte en admin, ejecuta en Supabase → SQL Editor (reemplazando por tu correo):</p>
+        <pre>{`update perfiles set rol = 'admin'\nwhere id = (select id from auth.users where email = '${user.email}');`}</pre>
         <p>Luego recarga esta página.</p>
       </main>
     );
@@ -58,7 +41,6 @@ where id = (select id from auth.users where email = '${user.email}');`}
   return <PanelAdmin adminEmail={user.email} />;
 }
 
-/* ---------------- Login simple ---------------- */
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -90,16 +72,10 @@ function LoginForm() {
         {error && <p className="status-error">{error}</p>}
         <button type="submit" disabled={cargando}>{cargando ? 'Un momento…' : 'Iniciar sesión'}</button>
       </form>
-      <p style={{ marginTop: 16, fontSize: '0.85rem', opacity: 0.7 }}>
-        ¿No tienes cuenta todavía? Créala primero en{' '}
-        <a href="/registro">/registro</a>, y luego vuelve aquí para
-        convertirte en admin.
-      </p>
     </main>
   );
 }
 
-/* ---------------- Panel una vez confirmado el rol admin ---------------- */
 function PanelAdmin({ adminEmail }) {
   const [pendientes, setPendientes] = useState([]);
   const [activos, setActivos] = useState([]);
@@ -108,70 +84,39 @@ function PanelAdmin({ adminEmail }) {
 
   async function cargarTalleres() {
     setCargando(true);
-    const { data: pend } = await supabase
-      .from('talleres')
-      .select('*')
-      .eq('estado', 'pendiente')
-      .order('creado_en', { ascending: false });
-    const { data: act } = await supabase
-      .from('talleres')
-      .select('*')
-      .eq('estado', 'activo')
-      .order('creado_en', { ascending: false });
+    const { data: pend } = await supabase.from('talleres').select('*').eq('estado', 'pendiente').order('creado_en', { ascending: false });
+    const { data: act } = await supabase.from('talleres').select('*').eq('estado', 'activo').order('creado_en', { ascending: false });
     setPendientes(pend || []);
     setActivos(act || []);
     setCargando(false);
   }
 
-  useEffect(() => {
-    cargarTalleres();
-  }, []);
+  useEffect(() => { cargarTalleres(); }, []);
+
+  async function verDocumento(ruta) {
+    const { data, error } = await supabase.storage.from('documentos-talleres').createSignedUrl(ruta, 60);
+    if (error) { setMensaje('No se pudo abrir el documento: ' + error.message); return; }
+    window.open(data.signedUrl, '_blank');
+  }
 
   async function aprobar(taller) {
     setMensaje(null);
-    const { error } = await supabase
-      .from('talleres')
-      .update({ estado: 'activo', documento_estado: 'aprobado' })
-      .eq('id', taller.id);
-    if (error) {
-      setMensaje('Error al aprobar: ' + error.message);
-    } else {
-      setMensaje(`✓ ${taller.nombre} fue aprobado y ya está activo.`);
-      cargarTalleres();
-    }
-  }
-
-  async function verDocumento(ruta) {
-    const { data, error } = await supabase.storage
-      .from('documentos-talleres')
-      .createSignedUrl(ruta, 60); // el link expira en 60 segundos
-
-    if (error) {
-      setMensaje('No se pudo abrir el documento: ' + error.message);
-      return;
-    }
-    window.open(data.signedUrl, '_blank');
+    const { error } = await supabase.from('talleres').update({ estado: 'activo', documento_estado: 'aprobado' }).eq('id', taller.id);
+    if (error) setMensaje('Error al aprobar: ' + error.message);
+    else { setMensaje(`✓ ${taller.nombre} fue aprobado y ya está activo.`); cargarTalleres(); }
   }
 
   async function rechazar(taller) {
     setMensaje(null);
-    const { error } = await supabase
-      .from('talleres')
-      .update({ estado: 'rechazado', documento_estado: 'rechazado' })
-      .eq('id', taller.id);
-    if (error) {
-      setMensaje('Error al rechazar: ' + error.message);
-    } else {
-      setMensaje(`${taller.nombre} fue rechazado.`);
-      cargarTalleres();
-    }
+    const { error } = await supabase.from('talleres').update({ estado: 'rechazado', documento_estado: 'rechazado' }).eq('id', taller.id);
+    if (error) setMensaje('Error al rechazar: ' + error.message);
+    else { setMensaje(`${taller.nombre} fue rechazado.`); cargarTalleres(); }
   }
 
   return (
     <main className="wrap">
       <h1>Panel admin</h1>
       <p className="status-ok">✓ Conectado como {adminEmail}</p>
-
       {mensaje && <p style={{ fontWeight: 600 }}>{mensaje}</p>}
 
       <h2 style={{ marginTop: 32 }}>Pendientes de aprobar ({pendientes.length})</h2>

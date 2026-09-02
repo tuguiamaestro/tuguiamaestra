@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-export default function AuthStatus() {
+export default function AuthStatus({ mobile }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -20,6 +20,17 @@ export default function AuthStatus() {
   }
 
   if (!user) return null;
+
+  if (mobile) {
+    return (
+      <div className="mnav-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>{user.email}</span>
+        <button type="button" className="btn-ghost" onClick={cerrarSesion} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+          Cerrar sesión
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

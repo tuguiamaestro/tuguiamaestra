@@ -1,7 +1,3 @@
-// Este código corre en el SERVIDOR (Vercel), nunca en el navegador del
-// cliente — por eso es seguro usar aquí el Auth Token de Twilio, que no
-// debe quedar visible en el sitio público.
-
 export async function POST(request) {
   const { telefono } = await request.json();
 
@@ -14,33 +10,24 @@ export async function POST(request) {
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
   if (!accountSid || !authToken || !serviceSid) {
-    return Response.json(
-      { error: 'Faltan las variables de entorno de Twilio en Vercel.' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Faltan las variables de entorno de Twilio en Vercel.' }, { status: 500 });
   }
 
   const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
 
-  const res = await fetch(
-    `https://verify.twilio.com/v2/Services/${serviceSid}/Verifications`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({ To: telefono, Channel: 'sms' }),
-    }
-  );
+  const res = await fetch(`https://verify.twilio.com/v2/Services/${serviceSid}/Verifications`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({ To: telefono, Channel: 'sms' }),
+  });
 
   const data = await res.json();
 
   if (!res.ok) {
-    return Response.json(
-      { error: data.message || 'No se pudo enviar el código.' },
-      { status: 400 }
-    );
+    return Response.json({ error: data.message || 'No se pudo enviar el código.' }, { status: 400 });
   }
 
   return Response.json({ status: data.status });

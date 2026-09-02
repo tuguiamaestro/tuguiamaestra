@@ -4,23 +4,26 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
 
+const comunasDisponibles = ['Providencia', 'Ñuñoa', 'Las Condes', 'Maipú', 'San Miguel', 'Otra'];
+const urgencias = ['Lo antes posible', 'En 1 mes', 'Aún explorando'];
+
 export default function SolicitarPage() {
   return (
     <Suspense fallback={<main className="wrap"><p>Cargando…</p></main>}>
-      <SolicitarContent />
+      <SolicitarWizard />
     </Suspense>
   );
 }
 
-function SolicitarContent() {
+function SolicitarWizard() {
   const searchParams = useSearchParams();
   const tallerIdDirecto = searchParams.get('taller');
 
+  const [paso, setPaso] = useState(1);
+  const totalPasos = 4;
+
   const [categorias, setCategorias] = useState([]);
   const [tallerDirecto, setTallerDirecto] = useState(null);
-  const [enviado, setEnviado] = useState(false);
-  const [error, setError] = useState(null);
-  const [enviando, setEnviando] = useState(false);
 
   const [form, setForm] = useState({
     categoria_id: '',
@@ -32,22 +35,23 @@ function SolicitarContent() {
     cliente_email: '',
   });
 
-  useEffect(() => {
-    async function cargarCategorias() {
-      const { data } = await supabase.from('categorias').select('*').order('nombre');
-      if (data) {
-        setCategorias(data);
-        setForm((f) => ({ ...f, categoria_id: data[0]?.id || '' }));
-      }
-    }
-    cargarCategorias();
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+  const [talleresNotificados, setTalleresNotificados] = useState(0);
 
+  const [codigoEnviado, setCodigoEnviado] = useState(false);
+  const [telefonoVerificado, setTelefonoVerificado] = useState(false);
+  const [codigo, setCodigo] = useState('');
+  const [verificando, setVerificando] = useState(false);
+  const [errorVerificacion, setErrorVerificacion] = useState(null);
+
+  useEffect(() => {
+    supabase.from('categorias').select('*').order('nombre').then(({ data }) => {
+      if (data) setCategorias(data);
+    });
     if (tallerIdDirecto) {
-      supabase
-        .from('talleres')
-        .select('id, nombre')
-        .eq('id', tallerIdDirecto)
-        .single()
+      supabase.from('talleres').select('id, nombre').eq('id', tallerIdDirecto).single()
         .then(({ data }) => setTallerDirecto(data || null));
     }
   }, [tallerIdDirecto]);
@@ -56,13 +60,18 @@ function SolicitarContent() {
     setForm((f) => ({ ...f, [campo]: valor }));
   }
 
-  const [talleresNotificados, setTalleresNotificados] = useState(0);
-
-  const [codigoEnviado, setCodigoEnviado] = useState(false);
-  const [telefonoVerificado, setTelefonoVerificado] = useState(false);
-  const [codigo, setCodigo] = useState('');
-  const [verificando, setVerificando] = useState(false);
-  const [errorVerificacion, setErrorVerificacion] = useState(null);
+  function siguiente() {
+    if (paso === 1 && !form.categoria_id) {
+      setError('Elige una categoría para continuar.');
+      return;
+    }
+    setError(null);
+    setPaso((p) => Math.min(p + 1, totalPasos));
+  }
+  function atras() {
+    setError(null);
+    setPaso((p) => Math.max(p - 1, 1));
+  }
 
   async function enviarCodigo() {
     setErrorVerificacion(null);
@@ -102,22 +111,16 @@ function SolicitarContent() {
     setTelefonoVerificado(true);
   }
 
-  async function enviarSolicitud(e) {
-    e.preventDefault();
+  async function enviarSolicitud() {
     setError(null);
 
     if (!form.cliente_nombre || !form.cliente_telefono) {
       setError('Ingresa al menos tu nombre y teléfono.');
       return;
     }
-    // Nota: la verificación SMS por ahora es opcional (no bloquea el envío)
-    // hasta que la cuenta de Twilio esté activada. Cuando la actives,
-    // vuelve a poner este bloqueo:
-    //   if (!telefonoVerificado) { setError('Verifica tu teléfono...'); return; }
 
     setEnviando(true);
 
-    // 1. Guardar la solicitud
     const { data: nuevaSolicitud, error: insertError } = await supabase
       .from('solicitudes')
       .insert([{ ...form, telefono_verificado: telefonoVerificado, taller_id_directo: tallerIdDirecto || null }])
@@ -130,8 +133,6 @@ function SolicitarContent() {
       return;
     }
 
-    // 2. Si NO vino de un perfil específico, hacer el matching automático:
-    //    buscar talleres activos que trabajen esa categoría en esa comuna.
     if (!tallerIdDirecto) {
       const { data: candidatos } = await supabase
         .from('talleres_categorias')
@@ -149,7 +150,6 @@ function SolicitarContent() {
         await supabase.from('leads').insert(nuevosLeads);
         setTalleresNotificados(candidatos.length);
 
-        // Avisar por correo a cada taller (no bloquea el envío si falla)
         candidatos.forEach((c) => {
           fetch('/api/notificar-lead', {
             method: 'POST',
@@ -174,147 +174,189 @@ function SolicitarContent() {
 
   if (enviado) {
     return (
-      <main className="wrap">
-        <h1>✓ Solicitud enviada</h1>
-        {tallerIdDirecto ? (
-          <p className="status-ok">
-            Se envió directo a <strong>{tallerDirecto?.nombre}</strong>.
-          </p>
-        ) : talleresNotificados > 0 ? (
-          <p className="status-ok">
-            Se notificó a {talleresNotificados} taller{talleresNotificados === 1 ? '' : 'es'} que
-            trabajan esa categoría en tu comuna.
-          </p>
-        ) : (
-          <p className="status-error">
-            Tu solicitud quedó guardada, pero hoy no hay ningún taller activo
-            que trabaje esa categoría en esa comuna — apenas se registre uno,
-            podrá verla si vuelves a intentarlo, o puedes buscar directo en{' '}
-            <a href="/listado">el listado</a>.
-          </p>
-        )}
-        <a href="/">← Volver al inicio</a>
+      <main className="wizard-shell">
+        <div className="success-box">
+          <div className="mark-ok">✓</div>
+          <h2>Solicitud enviada</h2>
+          {tallerIdDirecto ? (
+            <p className="status-ok">Se envió directo a <strong>{tallerDirecto?.nombre}</strong>.</p>
+          ) : talleresNotificados > 0 ? (
+            <p className="status-ok">
+              Se notificó a {talleresNotificados} taller{talleresNotificados === 1 ? '' : 'es'} que trabajan esa categoría en tu comuna.
+            </p>
+          ) : (
+            <p className="status-error">
+              Tu solicitud quedó guardada, pero hoy no hay ningún taller activo en esa categoría/comuna —
+              puedes buscar directo en <a href="/listado">el listado</a>.
+            </p>
+          )}
+          <a href="/"><button type="button" style={{ marginTop: 20 }}>Volver al inicio</button></a>
+        </div>
       </main>
     );
   }
 
+  const labels = ['Categoría', 'Detalles', 'Contacto', 'Resumen'];
+
   return (
-    <main className="wrap">
-      <h1>Pedir presupuesto</h1>
+    <main className="wizard-shell">
+      <div className="wizard-head">
+        <div className="eyebrow">Solicitud de presupuesto</div>
+        <h1>Cuéntanos qué necesitas</h1>
+      </div>
+
+      <div className="dovetail-track">
+        {labels.map((label, i) => (
+          <div key={label} className={`dt-pin ${i + 1 < paso ? 'done' : i + 1 === paso ? 'current' : ''}`}>
+            <span>{String(i + 1).padStart(2, '0')} {label}</span>
+          </div>
+        ))}
+      </div>
+
       {tallerDirecto && (
-        <p className="status-ok">
+        <p className="status-ok" style={{ marginBottom: 20 }}>
           Esta solicitud se enviará directo a <strong>{tallerDirecto.nombre}</strong>.
         </p>
       )}
-      <p>Este formulario escribe directo en tu base de datos de Supabase.</p>
 
-      <form onSubmit={enviarSolicitud} style={{ maxWidth: 480, marginTop: 24 }}>
-        <div className="field">
-          <label>Categoría</label>
-          <select
-            value={form.categoria_id}
-            onChange={(e) => actualizarCampo('categoria_id', e.target.value)}
-          >
+      {paso === 1 && (
+        <div className="wizard-panel">
+          <h2>¿Qué tipo de mueble necesitas?</h2>
+          <p className="hint">Elige la categoría que más se acerca a tu proyecto.</p>
+          <div className="opt-grid">
             {categorias.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
+              <div
+                key={c.id}
+                className={`opt-card ${form.categoria_id === c.id ? 'selected' : ''}`}
+                onClick={() => actualizarCampo('categoria_id', c.id)}
+              >
+                <span className="oicon">{c.icono}</span>
+                <span className="oname">{c.nombre}</span>
+              </div>
             ))}
-          </select>
+          </div>
         </div>
+      )}
 
-        <div className="field">
-          <label>Comuna</label>
-          <select
-            value={form.comuna}
-            onChange={(e) => actualizarCampo('comuna', e.target.value)}
-          >
-            {['Providencia', 'Ñuñoa', 'Las Condes', 'Maipú', 'San Miguel', 'Otra'].map(
-              (c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              )
-            )}
-          </select>
-        </div>
-
-        <div className="field">
-          <label>Describe tu proyecto</label>
-          <textarea
-            value={form.descripcion}
-            onChange={(e) => actualizarCampo('descripcion', e.target.value)}
-            placeholder="Ej: Cocina en L de 3x2,5m, melamina blanca…"
-          />
-        </div>
-
-        <div className="field">
-          <label>Nombre</label>
-          <input
-            type="text"
-            value={form.cliente_nombre}
-            onChange={(e) => actualizarCampo('cliente_nombre', e.target.value)}
-          />
-        </div>
-
-        <div className="field">
-          <label>Teléfono</label>
-          <input
-            type="text"
-            value={form.cliente_telefono}
-            onChange={(e) => {
-              actualizarCampo('cliente_telefono', e.target.value);
-              setTelefonoVerificado(false);
-              setCodigoEnviado(false);
-            }}
-            placeholder="+56 9 …"
-          />
-        </div>
-
-        <div className="field">
-          <label>Verificación de teléfono</label>
-          {telefonoVerificado ? (
-            <p className="status-ok">✓ Teléfono verificado</p>
-          ) : !codigoEnviado ? (
-            <button type="button" className="btn-ghost" onClick={enviarCodigo} disabled={verificando}>
-              {verificando ? 'Enviando…' : 'Enviar código SMS'}
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input
-                type="text"
-                placeholder="Código de 6 dígitos"
-                value={codigo}
-                onChange={(e) => setCodigo(e.target.value)}
-                style={{ maxWidth: 160 }}
-              />
-              <button type="button" className="btn-brass" onClick={verificarCodigo} disabled={verificando}>
-                {verificando ? 'Verificando…' : 'Verificar'}
-              </button>
+      {paso === 2 && (
+        <div className="wizard-panel">
+          <h2>Detalles del proyecto</h2>
+          <p className="hint">Mientras más precisa la descripción, mejores presupuestos recibirás.</p>
+          <div className="field">
+            <label>Describe tu proyecto</label>
+            <textarea
+              value={form.descripcion}
+              onChange={(e) => actualizarCampo('descripcion', e.target.value)}
+              placeholder="Ej: Cocina en L de 4x2,5 m, con isla, melamina blanca…"
+            />
+          </div>
+          <div className="field">
+            <label>Comuna</label>
+            <select value={form.comuna} onChange={(e) => actualizarCampo('comuna', e.target.value)}>
+              {comunasDisponibles.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>¿Cuándo te gustaría partir?</label>
+            <div className="chip-row">
+              {urgencias.map((u) => (
+                <div
+                  key={u}
+                  className={`chip ${form.urgencia === u ? 'selected' : ''}`}
+                  onClick={() => actualizarCampo('urgencia', u)}
+                >
+                  {u}
+                </div>
+              ))}
             </div>
-          )}
-          {errorVerificacion && <p className="status-error">{errorVerificacion}</p>}
-          <p style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: 6 }}>
-            Esto evita solicitudes falsas — los talleres solo reciben leads con teléfono verificado.
-            Por ahora es opcional (puedes enviar sin verificar) mientras se activa el servicio de SMS.
-          </p>
+          </div>
         </div>
+      )}
 
-        <div className="field">
-          <label>Correo (opcional)</label>
-          <input
-            type="email"
-            value={form.cliente_email}
-            onChange={(e) => actualizarCampo('cliente_email', e.target.value)}
-          />
+      {paso === 3 && (
+        <div className="wizard-panel">
+          <h2>Tus datos de contacto</h2>
+          <p className="hint">Solo los talleres que elijas responder verán tus datos.</p>
+          <div className="field">
+            <label>Nombre</label>
+            <input type="text" value={form.cliente_nombre} onChange={(e) => actualizarCampo('cliente_nombre', e.target.value)} />
+          </div>
+          <div className="field">
+            <label>Teléfono</label>
+            <input
+              type="text"
+              value={form.cliente_telefono}
+              onChange={(e) => {
+                actualizarCampo('cliente_telefono', e.target.value);
+                setTelefonoVerificado(false);
+                setCodigoEnviado(false);
+              }}
+              placeholder="+56 9 …"
+            />
+          </div>
+          <div className="field">
+            <label>Correo (opcional)</label>
+            <input type="email" value={form.cliente_email} onChange={(e) => actualizarCampo('cliente_email', e.target.value)} />
+          </div>
+          <div className="field">
+            <label>Verificación de teléfono</label>
+            {telefonoVerificado ? (
+              <p className="status-ok">✓ Teléfono verificado</p>
+            ) : !codigoEnviado ? (
+              <button type="button" className="btn-ghost" onClick={enviarCodigo} disabled={verificando}>
+                {verificando ? 'Enviando…' : 'Enviar código SMS'}
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Código de 6 dígitos"
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  style={{ maxWidth: 160 }}
+                />
+                <button type="button" className="btn-brass" onClick={verificarCodigo} disabled={verificando}>
+                  {verificando ? 'Verificando…' : 'Verificar'}
+                </button>
+              </div>
+            )}
+            {errorVerificacion && <p className="status-error">{errorVerificacion}</p>}
+            <p style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: 6 }}>
+              Opcional por ahora mientras se activa el servicio de SMS.
+            </p>
+          </div>
         </div>
+      )}
 
-        {error && <p className="status-error">{error}</p>}
+      {paso === 4 && (
+        <div className="wizard-panel">
+          <h2>Revisa tu solicitud</h2>
+          <p className="hint">Puedes volver atrás para editar cualquier paso.</p>
+          <div className="summary-box">
+            <div className="summary-row"><span className="k">Categoría</span><span className="v">{categorias.find((c) => c.id === form.categoria_id)?.nombre || '—'}</span></div>
+            <div className="summary-row"><span className="k">Descripción</span><span className="v">{form.descripcion || '—'}</span></div>
+            <div className="summary-row"><span className="k">Comuna</span><span className="v">{form.comuna}</span></div>
+            <div className="summary-row"><span className="k">Cuándo partir</span><span className="v">{form.urgencia}</span></div>
+            <div className="summary-row"><span className="k">Nombre</span><span className="v">{form.cliente_nombre || '—'}</span></div>
+            <div className="summary-row"><span className="k">Contacto</span><span className="v">{form.cliente_telefono} · {form.cliente_email || 'sin correo'}</span></div>
+          </div>
+        </div>
+      )}
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Enviando…' : 'Enviar solicitud'}
+      {error && <p className="status-error">{error}</p>}
+
+      <div className="wizard-nav">
+        <button type="button" className="btn-ghost" onClick={atras} style={{ visibility: paso === 1 ? 'hidden' : 'visible' }}>
+          Atrás
         </button>
-      </form>
+        {paso < totalPasos ? (
+          <button type="button" onClick={siguiente}>Continuar</button>
+        ) : (
+          <button type="button" onClick={enviarSolicitud} disabled={enviando}>
+            {enviando ? 'Enviando…' : 'Enviar solicitud'}
+          </button>
+        )}
+      </div>
     </main>
   );
 }

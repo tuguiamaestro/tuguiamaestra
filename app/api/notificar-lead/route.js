@@ -4,8 +4,6 @@ export async function POST(request) {
   const { tallerEmail, tallerNombre, categoria, comuna, descripcion } = await request.json();
 
   if (!tallerEmail) {
-    // No es un error grave — simplemente ese taller no tiene correo
-    // guardado todavía, así que no hay a quién avisarle por ahora.
     return Response.json({ omitido: true });
   }
 
@@ -21,7 +19,7 @@ export async function POST(request) {
           <li><strong>Comuna:</strong> ${comuna}</li>
           <li><strong>Descripción:</strong> ${descripcion || 'Sin descripción'}</li>
         </ul>
-        <p>Entra a tu <a href="https://tuguiamaestra.vercel.app/panel">panel de taller</a> para ver el detalle y aceptar el contacto.</p>
+        <p>Entra a tu <a href="https://tuguiamaestra.cl/panel">panel de taller</a> para ver el detalle y aceptar el contacto.</p>
       `,
     });
     return Response.json({ enviado: true });

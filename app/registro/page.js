@@ -28,9 +28,8 @@ export default function RegistroPage() {
   );
 }
 
-/* ---------------- Paso 1: crear cuenta / iniciar sesión ---------------- */
 function LoginForm() {
-  const [modo, setModo] = useState('signup'); // 'signup' | 'login'
+  const [modo, setModo] = useState('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState(null);
@@ -47,9 +46,7 @@ function LoginForm() {
       const { data, error: err } = await supabase.auth.signUp({ email, password });
       setCargando(false);
       if (err) return setError(err.message);
-      if (!data.session) {
-        setMensaje('Cuenta creada. Revisa tu correo para confirmar antes de continuar.');
-      }
+      if (!data.session) setMensaje('Cuenta creada. Revisa tu correo para confirmar antes de continuar.');
     } else {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password });
       setCargando(false);
@@ -60,13 +57,9 @@ function LoginForm() {
   return (
     <div style={{ maxWidth: 420 }}>
       <p>Primero crea tu cuenta (o inicia sesión si ya la tienes).</p>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <button type="button" onClick={() => setModo('signup')} style={{ fontWeight: modo === 'signup' ? 700 : 400 }}>
-          Crear cuenta
-        </button>
-        <button type="button" onClick={() => setModo('login')} style={{ fontWeight: modo === 'login' ? 700 : 400 }}>
-          Iniciar sesión
-        </button>
+      <div className="chip-row" style={{ marginBottom: 16 }}>
+        <div className={`chip ${modo === 'signup' ? 'selected' : ''}`} onClick={() => setModo('signup')}>Crear cuenta</div>
+        <div className={`chip ${modo === 'login' ? 'selected' : ''}`} onClick={() => setModo('login')}>Iniciar sesión</div>
       </div>
       <form onSubmit={enviar}>
         <div className="field">
@@ -87,7 +80,6 @@ function LoginForm() {
   );
 }
 
-/* ---------------- Paso 2: datos del taller (ya con sesión activa) ---------------- */
 function TallerForm({ user }) {
   const [categorias, setCategorias] = useState([]);
   const [catsSeleccionadas, setCatsSeleccionadas] = useState([]);
@@ -97,13 +89,7 @@ function TallerForm({ user }) {
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
-  const [form, setForm] = useState({
-    nombre: '',
-    rut: '',
-    comuna: 'Providencia',
-    descripcion: '',
-  });
-
+  const [form, setForm] = useState({ nombre: '', rut: '', comuna: 'Providencia', descripcion: '' });
   const comunasDisponibles = ['Providencia', 'Ñuñoa', 'Las Condes', 'Maipú', 'San Miguel', 'Otra'];
 
   useEffect(() => {
@@ -113,36 +99,22 @@ function TallerForm({ user }) {
   }, []);
 
   function toggleCat(id) {
-    setCatsSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+    setCatsSeleccionadas((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]);
   }
   function toggleComuna(c) {
-    setComunasSeleccionadas((prev) =>
-      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
-    );
+    setComunasSeleccionadas((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
   }
 
   async function registrarTaller(e) {
     e.preventDefault();
     setError(null);
 
-    if (!form.nombre || !form.rut) {
-      setError('El nombre del taller y el RUT son obligatorios.');
-      return;
-    }
-    if (catsSeleccionadas.length === 0) {
-      setError('Elige al menos una especialidad.');
-      return;
-    }
-    if (!documento) {
-      setError('Sube tu documento de verificación (Inicio de Actividades o cédula).');
-      return;
-    }
+    if (!form.nombre || !form.rut) return setError('El nombre del taller y el RUT son obligatorios.');
+    if (catsSeleccionadas.length === 0) return setError('Elige al menos una especialidad.');
+    if (!documento) return setError('Sube tu documento de verificación (Inicio de Actividades o cédula).');
 
     setEnviando(true);
 
-    // 1. Crear el taller
     const { data: taller, error: errTaller } = await supabase
       .from('talleres')
       .insert([{ ...form, owner_id: user.id, email: user.email, estado: 'pendiente' }])
@@ -151,37 +123,28 @@ function TallerForm({ user }) {
 
     if (errTaller) {
       setEnviando(false);
-      setError('No se pudo registrar: ' + errTaller.message);
-      return;
+      return setError('No se pudo registrar: ' + errTaller.message);
     }
 
-    // 1b. Subir el documento de verificación a Storage
     const extension = documento.name.split('.').pop();
     const rutaArchivo = `${taller.id}/documento.${extension}`;
-
     const { error: errUpload } = await supabase.storage
       .from('documentos-talleres')
       .upload(rutaArchivo, documento, { upsert: true });
 
     if (errUpload) {
       setEnviando(false);
-      setError('El taller se creó, pero no se pudo subir el documento: ' + errUpload.message);
-      return;
+      return setError('El taller se creó, pero no se pudo subir el documento: ' + errUpload.message);
     }
 
-    await supabase
-      .from('talleres')
-      .update({ documento_verificacion_url: rutaArchivo, documento_estado: 'pendiente' })
-      .eq('id', taller.id);
+    await supabase.from('talleres').update({ documento_verificacion_url: rutaArchivo, documento_estado: 'pendiente' }).eq('id', taller.id);
 
-    // 2. Guardar especialidades y comunas de cobertura
     const { error: errCats } = await supabase.from('talleres_categorias').insert(
       catsSeleccionadas.map((categoria_id) => ({ taller_id: taller.id, categoria_id }))
     );
     if (errCats) {
       setEnviando(false);
-      setError('El taller se creó, pero no se pudieron guardar las especialidades: ' + errCats.message);
-      return;
+      return setError('El taller se creó, pero no se pudieron guardar las especialidades: ' + errCats.message);
     }
 
     if (comunasSeleccionadas.length > 0) {
@@ -190,29 +153,15 @@ function TallerForm({ user }) {
       );
       if (errComunas) {
         setEnviando(false);
-        setError('El taller se creó, pero no se pudieron guardar las comunas de cobertura: ' + errComunas.message);
-        return;
+        return setError('El taller se creó, pero no se pudieron guardar las comunas: ' + errComunas.message);
       }
     }
 
-    // 3. Actualizar el perfil del usuario — vincula el taller, pero
-    //    nunca le quita el rol 'admin' si ya lo tenía (evita que un
-    //    admin pierda su rol por registrar un taller con la misma cuenta)
-    const { data: perfilActual } = await supabase
-      .from('perfiles')
-      .select('rol')
-      .eq('id', user.id)
-      .single();
-
+    const { data: perfilActual } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
     const nuevoRol = perfilActual?.rol === 'admin' ? 'admin' : 'taller';
 
-    await supabase
-      .from('perfiles')
-      .update({ rol: nuevoRol, taller_id: taller.id, nombre: form.nombre })
-      .eq('id', user.id);
+    await supabase.from('perfiles').update({ rol: nuevoRol, taller_id: taller.id, nombre: form.nombre }).eq('id', user.id);
 
-    // 4. Avisarle al admin que hay un taller nuevo esperando aprobación
-    //    (no bloquea el registro si el correo falla por alguna razón)
     fetch('/api/notificar-taller-pendiente', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -227,11 +176,7 @@ function TallerForm({ user }) {
     return (
       <div>
         <h2>✓ Taller registrado</h2>
-        <p>
-          Quedó guardado en la tabla <code>talleres</code> con estado{' '}
-          <strong>pendiente</strong>. Revísalo en Supabase → Table Editor →
-          talleres.
-        </p>
+        <p>Quedó guardado con estado <strong>pendiente</strong>. Un administrador revisará tu documento antes de activar tu perfil.</p>
         <a href="/">← Volver al inicio</a>
       </div>
     );
@@ -243,87 +188,57 @@ function TallerForm({ user }) {
       <form onSubmit={registrarTaller}>
         <div className="field">
           <label>Nombre del taller</label>
-          <input
-            type="text"
-            value={form.nombre}
-            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-          />
+          <input type="text" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
         </div>
         <div className="field">
           <label>RUT / Inicio de actividades</label>
-          <input
-            type="text"
-            value={form.rut}
-            onChange={(e) => setForm({ ...form, rut: e.target.value })}
-          />
+          <input type="text" value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} />
         </div>
         <div className="field">
           <label>Comuna base</label>
-          <select
-            value={form.comuna}
-            onChange={(e) => setForm({ ...form, comuna: e.target.value })}
-          >
-            {comunasDisponibles.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+          <select value={form.comuna} onChange={(e) => setForm({ ...form, comuna: e.target.value })}>
+            {comunasDisponibles.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="field">
           <label>Descripción</label>
-          <textarea
-            value={form.descripcion}
-            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-          />
+          <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
         </div>
 
         <div className="field">
           <label>Documento de verificación (Inicio de Actividades SII o cédula)</label>
-          <input
-            type="file"
-            accept="image/*,.pdf"
-            onChange={(e) => setDocumento(e.target.files[0] || null)}
-          />
+          <input type="file" accept="image/*,.pdf" onChange={(e) => setDocumento(e.target.files[0] || null)} />
           <p style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: 6 }}>
-            No se publica tu perfil hasta que revisemos este documento. Solo lo ve un
-            administrador, nunca los clientes.
+            No se publica tu perfil hasta que revisemos este documento. Solo lo ve un administrador.
           </p>
         </div>
 
         <div className="field">
           <label>Especialidades</label>
-          {categorias.map((c) => (
-            <label key={c.id} style={{ display: 'block', fontWeight: 400, marginBottom: 4 }}>
-              <input
-                type="checkbox"
-                checked={catsSeleccionadas.includes(c.id)}
-                onChange={() => toggleCat(c.id)}
-                style={{ width: 'auto', marginRight: 8 }}
-              />
-              {c.icono} {c.nombre}
-            </label>
-          ))}
+          <div className="opt-grid">
+            {categorias.map((c) => (
+              <div key={c.id} className={`opt-card ${catsSeleccionadas.includes(c.id) ? 'selected' : ''}`} onClick={() => toggleCat(c.id)}>
+                <span className="oicon">{c.icono}</span>
+                <span className="oname">{c.nombre}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="field">
           <label>Zonas de cobertura</label>
-          {comunasDisponibles.map((c) => (
-            <label key={c} style={{ display: 'block', fontWeight: 400, marginBottom: 4 }}>
-              <input
-                type="checkbox"
-                checked={comunasSeleccionadas.includes(c)}
-                onChange={() => toggleComuna(c)}
-                style={{ width: 'auto', marginRight: 8 }}
-              />
-              {c}
-            </label>
-          ))}
+          <div className="chip-row">
+            {comunasDisponibles.map((c) => (
+              <div key={c} className={`chip ${comunasSeleccionadas.includes(c) ? 'selected' : ''}`} onClick={() => toggleComuna(c)}>
+                {c}
+              </div>
+            ))}
+          </div>
         </div>
 
         {error && <p className="status-error">{error}</p>}
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Registrando…' : 'Registrar taller'}
-        </button>
+        <button type="submit" disabled={enviando}>{enviando ? 'Registrando…' : 'Registrar taller'}</button>
       </form>
     </div>
   );

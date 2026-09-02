@@ -15,7 +15,7 @@ export async function POST(request) {
       html: `
         <h2>Nuevo taller registrado</h2>
         <p><strong>${tallerNombre}</strong> (${comuna}, RUT ${rut}) se acaba de registrar y está esperando tu aprobación.</p>
-        <p>Entra al <a href="https://tuguiamaestra.vercel.app/admin">panel admin</a> para revisarlo y aprobarlo o rechazarlo.</p>
+        <p>Entra al <a href="https://tuguiamaestra.cl/admin">panel admin</a> para revisarlo y aprobarlo o rechazarlo.</p>
       `,
     });
     return Response.json({ enviado: true });
