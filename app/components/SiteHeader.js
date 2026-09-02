@@ -15,37 +15,45 @@ export default function SiteHeader() {
   ];
 
   return (
-    <header className="site-header">
-      <a href="/" className="logo">
-        <svg viewBox="0 0 30 30" width="26" height="26" fill="none">
-          <path d="M4 24 L15 6 L26 24 Z" stroke="#241E19" strokeWidth="2" fill="none" />
-          <path d="M10 24 L15 15 L20 24" stroke="#B08D3E" strokeWidth="2" />
-        </svg>
-        TuGuíaMaestra
-      </a>
-
-      <nav className="header-desktop-nav">
-        {links.map((l) => (
-          <a key={l.href} href={l.href}>{l.label}</a>
-        ))}
-        <AuthStatus />
-      </nav>
-
-      <button
-        type="button"
-        className={`menu-toggle ${open ? 'open' : ''}`}
-        onClick={() => setOpen(!open)}
-        aria-label="Abrir menú"
-      >
-        <span></span><span></span><span></span>
-      </button>
-
-      <div className={`mobile-nav ${open ? 'open' : ''}`}>
-        {links.map((l) => (
-          <a key={l.href} href={l.href} onClick={() => setOpen(false)}>{l.label}</a>
-        ))}
-        <AuthStatus mobile />
+    <>
+      <div className="top-bar">
+        <p>
+          🔨 ¿Tienes un taller de muebles? <a href="/registro">Suscríbete gratis y recibe tus primeros clientes →</a>
+        </p>
       </div>
-    </header>
+
+      <header className="site-header">
+        <a href="/" className="logo">
+          <svg viewBox="0 0 30 30" width="24" height="24" fill="none">
+            <path d="M4 24 L15 6 L26 24 Z" stroke="#241E19" strokeWidth="2" fill="none" />
+            <path d="M10 24 L15 15 L20 24" stroke="#B08D3E" strokeWidth="2" />
+          </svg>
+          TuGuíaMaestra
+        </a>
+
+        <nav className="header-desktop-nav">
+          {links.map((l) => (
+            <a key={l.href} href={l.href}>{l.label}</a>
+          ))}
+          <AuthStatus />
+        </nav>
+
+        <button
+          type="button"
+          className={`menu-toggle ${open ? 'open' : ''}`}
+          onClick={() => setOpen(!open)}
+          aria-label="Abrir menú"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <div className={`mobile-nav ${open ? 'open' : ''}`}>
+          {links.map((l) => (
+            <a key={l.href} href={l.href} onClick={() => setOpen(false)}>{l.label}</a>
+          ))}
+          <AuthStatus mobile />
+        </div>
+      </header>
+    </>
   );
 }
