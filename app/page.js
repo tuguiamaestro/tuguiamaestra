@@ -79,6 +79,23 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
+        <div className="cta-section">
+          <div>
+            <h2 style={{ marginBottom: 8 }}>¿Necesitas un mueble a medida?</h2>
+            <p style={{ opacity: 0.65, maxWidth: '42ch', margin: 0 }}>
+              Cuéntanos qué necesitas en 2 minutos y te contactan los talleres
+              que de verdad calzan con tu proyecto. Es gratis.
+            </p>
+          </div>
+          <a href="/solicitar">
+            <button type="button" style={{ padding: '16px 32px', fontSize: '1rem' }}>
+              Pedir presupuesto →
+            </button>
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
