@@ -297,6 +297,6 @@ code { background: var(--paper-2); padding: 2px 7px; border-radius: 4px; font-si
   .field-row { grid-template-columns: 1fr; }
   .opt-grid { grid-template-columns: 1fr; }
   .header-desktop-nav { display: none; }
-  .menu-toggle { display: flex; }
+  button.menu-toggle { display: flex; }
   .top-bar p { font-size: 0.74rem; }
 }
