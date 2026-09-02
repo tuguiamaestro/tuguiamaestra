@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import CategoriaIcon from '../components/CategoriaIcon';
 
 export default function RegistroPage() {
   const [user, setUser] = useState(null);
@@ -218,7 +219,7 @@ function TallerForm({ user }) {
           <div className="opt-grid">
             {categorias.map((c) => (
               <div key={c.id} className={`opt-card ${catsSeleccionadas.includes(c.id) ? 'selected' : ''}`} onClick={() => toggleCat(c.id)}>
-                <span className="oicon">{c.icono}</span>
+                <span className="oicon"><CategoriaIcon nombre={c.nombre} /></span>
                 <span className="oname">{c.nombre}</span>
               </div>
             ))}
