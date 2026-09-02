@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabaseClient';
+import CategoriaIcon from '../components/CategoriaIcon';
 
 const comunasDisponibles = ['Providencia', 'Ñuñoa', 'Las Condes', 'Maipú', 'San Miguel', 'Otra'];
 const urgencias = ['Lo antes posible', 'En 1 mes', 'Aún explorando'];
@@ -230,7 +231,7 @@ function SolicitarWizard() {
                 className={`opt-card ${form.categoria_id === c.id ? 'selected' : ''}`}
                 onClick={() => actualizarCampo('categoria_id', c.id)}
               >
-                <span className="oicon">{c.icono}</span>
+                <span className="oicon"><CategoriaIcon nombre={c.nombre} /></span>
                 <span className="oname">{c.nombre}</span>
               </div>
             ))}
