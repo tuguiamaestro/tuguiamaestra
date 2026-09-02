@@ -206,11 +206,12 @@ function SolicitarWizard() {
         <h1>Cuéntanos qué necesitas</h1>
       </div>
 
-      <div className="dovetail-track">
+      <div className="progress-track">
+        <div className="progress-fill" style={{ width: `${(paso / totalPasos) * 100}%` }}></div>
+      </div>
+      <div className="progress-labels">
         {labels.map((label, i) => (
-          <div key={label} className={`dt-pin ${i + 1 < paso ? 'done' : i + 1 === paso ? 'current' : ''}`}>
-            <span>{String(i + 1).padStart(2, '0')} {label}</span>
-          </div>
+          <span key={label} className={i + 1 <= paso ? 'done' : ''}>{label}</span>
         ))}
       </div>
 
