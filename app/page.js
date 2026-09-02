@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import CategoriaIcon from './components/CategoriaIcon';
 
 export const revalidate = 0;
 
@@ -68,7 +69,7 @@ export default async function HomePage() {
                   )}
                 </div>
                 <div className="info">
-                  <div className="name">{c.icono} {c.nombre}</div>
+                  <div className="name"><CategoriaIcon nombre={c.nombre} /> {c.nombre}</div>
                   <div className="count">
                     ${c.precio_min?.toLocaleString('es-CL')} – ${c.precio_max?.toLocaleString('es-CL')}
                   </div>
