@@ -10,14 +10,15 @@ export default async function HomePage() {
 
   const texturas = ['tex-1', 'tex-2', 'tex-3', 'tex-4', 'tex-5', 'tex-6'];
 
-  // Fotos reales por categoría.
+  // Fotos reales por categoría (conectadas por NOMBRE, no por id,
+  // para evitar problemas si el id interno no coincide como se espera).
   const fotosCategoria = {
-    cocinas: '/images/categoria-cocinas.jpg',
-    closets: '/images/categoria-closets.jpg',
-    banos: '/images/categoria-banos.jpg',
-    repisas: '/images/categoria-repisas.jpg',
-    restauracion: '/images/categoria-restauracion.jpg',
-    general: '/images/categoria-general.jpg',
+    'Cocinas': '/images/categoria-cocinas.jpg',
+    'Closets': '/images/categoria-closets.jpg',
+    'Baños / Vanitorios': '/images/categoria-banos.jpg',
+    'Repisas': '/images/categoria-repisas.jpg',
+    'Restauración': '/images/categoria-restauracion.jpg',
+    'Carpintería general': '/images/categoria-general.jpg',
   };
 
   return (
@@ -61,9 +62,9 @@ export default async function HomePage() {
           <div className="swatch-grid">
             {categorias.map((c, i) => (
               <a key={c.id} href={`/listado?categoria=${c.id}`} className="swatch">
-                <div className={`grain ${!fotosCategoria[c.id] ? `wood-tex ${texturas[i % texturas.length]}` : ''}`}>
-                  {fotosCategoria[c.id] && (
-                    <img src={fotosCategoria[c.id]} alt={c.nombre} className="photo" />
+                <div className={`grain ${!fotosCategoria[c.nombre] ? `wood-tex ${texturas[i % texturas.length]}` : ''}`}>
+                  {fotosCategoria[c.nombre] && (
+                    <img src={fotosCategoria[c.nombre]} alt={c.nombre} className="photo" />
                   )}
                 </div>
                 <div className="info">
