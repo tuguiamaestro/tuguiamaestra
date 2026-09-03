@@ -8,7 +8,6 @@ export default function SiteHeader() {
 
   const links = [
     { href: '/listado', label: 'Profesionales' },
-    { href: '/solicitar', label: 'Pedir presupuesto' },
     { href: '/registro', label: 'Soy mueblista' },
     { href: '/panel', label: 'Panel taller' },
   ];
@@ -35,6 +34,7 @@ export default function SiteHeader() {
             <a key={l.href} href={l.href}>{l.label}</a>
           ))}
           <AuthStatus />
+          <a href="/solicitar" className="btn-brass nav-cta">Pedir presupuesto</a>
         </nav>
 
         <button
@@ -45,14 +45,21 @@ export default function SiteHeader() {
         >
           <span></span><span></span><span></span>
         </button>
-
-        <div className={`mobile-nav ${open ? 'open' : ''}`}>
-          {links.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)}>{l.label}</a>
-          ))}
-          <AuthStatus mobile />
-        </div>
       </header>
+
+      {/* Este panel va FUERA del <header> a propósito: el header usa
+          backdrop-filter, y eso hace que en iPhone un elemento position:fixed
+          adentro quede atrapado dentro de la cajita del header en vez de
+          ocupar toda la pantalla. */}
+      <div className={`mobile-nav ${open ? 'open' : ''}`}>
+        <a href="/solicitar" className="btn-brass nav-cta-mobile" onClick={() => setOpen(false)}>
+          Pedir presupuesto
+        </a>
+        {links.map((l) => (
+          <a key={l.href} href={l.href} onClick={() => setOpen(false)}>{l.label}</a>
+        ))}
+        <AuthStatus mobile />
+      </div>
     </>
   );
 }
