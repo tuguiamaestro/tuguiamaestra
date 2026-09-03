@@ -22,10 +22,7 @@ export default function SiteHeader() {
 
       <header className="site-header">
         <a href="/" className="logo">
-          <svg viewBox="0 0 30 30" width="24" height="24" fill="none">
-            <path d="M4 24 L15 6 L26 24 Z" stroke="#241E19" strokeWidth="2" fill="none" />
-            <path d="M10 24 L15 15 L20 24" stroke="#B08D3E" strokeWidth="2" />
-          </svg>
+          <img src="/images/logo-icon.png" alt="TuGuíaMaestra" width="26" height="26" style={{ objectFit: 'contain' }} />
           TuGuíaMaestra
         </a>
 
