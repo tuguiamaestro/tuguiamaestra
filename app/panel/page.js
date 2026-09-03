@@ -24,7 +24,30 @@ export default function PanelTallerPage() {
   }, []);
 
   if (cargando) return <main className="wrap"><p>Cargando…</p></main>;
-  if (!user) return <LoginForm />;
+
+  if (!user) {
+    return (
+      <main className="wrap">
+        <div className="auth-layout">
+          <div>
+            <h1>Panel de mi taller</h1>
+            <LoginForm />
+          </div>
+          <div className="auth-side">
+            <div className="auth-side-photo">
+              <img src="/images/categoria-cocinas.jpg" alt="Panel de taller" className="photo" />
+            </div>
+            <h3>Tu panel, siempre a mano</h3>
+            <ul className="auth-benefits">
+              <li>Revisa cada solicitud que te llega, con nombre y contacto del cliente.</li>
+              <li>Acepta o descarta leads con un clic, sin que se te pasen.</li>
+              <li>Ve el estado de tu perfil (activo o pendiente de aprobación).</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!perfil?.taller_id) {
     return (
@@ -55,8 +78,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="wrap">
-      <h1>Panel de mi taller</h1>
+    <>
       <p>Inicia sesión con la cuenta de tu taller.</p>
       <form onSubmit={entrar} style={{ maxWidth: 380 }}>
         <div className="field">
@@ -73,7 +95,7 @@ function LoginForm() {
       <p style={{ marginTop: 16, fontSize: '0.85rem', opacity: 0.7 }}>
         ¿No tienes cuenta? Regístrate en <a href="/registro">/registro</a>.
       </p>
-    </main>
+    </>
   );
 }
 
