@@ -122,11 +122,21 @@ function SolicitarWizard() {
 
     setEnviando(true);
 
-    const { data: nuevaSolicitud, error: insertError } = await supabase
+    // Generamos el ID nosotros mismos (en vez de pedirle a Supabase que
+    // nos devuelva la fila con .select()) — así evitamos necesitar
+    // permiso de LECTURA sobre la tabla, que por privacidad solo debe
+    // tenerlo el admin (no queremos que cualquiera pueda leer teléfonos
+    // y correos de otros clientes).
+    const nuevaSolicitudId = crypto.randomUUID();
+
+    const { error: insertError } = await supabase
       .from('solicitudes')
-      .insert([{ ...form, telefono_verificado: telefonoVerificado, taller_id_directo: tallerIdDirecto || null }])
-      .select()
-      .single();
+      .insert([{
+        id: nuevaSolicitudId,
+        ...form,
+        telefono_verificado: telefonoVerificado,
+        taller_id_directo: tallerIdDirecto || null,
+      }]);
 
     if (insertError) {
       setEnviando(false);
@@ -144,7 +154,7 @@ function SolicitarWizard() {
 
       if (candidatos && candidatos.length > 0) {
         const nuevosLeads = candidatos.map((c) => ({
-          solicitud_id: nuevaSolicitud.id,
+          solicitud_id: nuevaSolicitudId,
           taller_id: c.taller_id,
           estado: 'nuevo',
         }));
