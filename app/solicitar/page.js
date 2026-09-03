@@ -8,6 +8,39 @@ import CategoriaIcon from '../components/CategoriaIcon';
 const comunasDisponibles = ['Providencia', 'Ñuñoa', 'Las Condes', 'Maipú', 'San Miguel', 'Otra'];
 const urgencias = ['Lo antes posible', 'En 1 mes', 'Aún explorando'];
 
+// Opciones de materiales/características por categoría, agrupadas.
+// tipo: 'unico' = el cliente elige solo una de ese grupo (como un radio button)
+// tipo: 'multiple' = puede elegir varias (como checkboxes)
+const materialesPorCategoria = {
+  'Cocinas': [
+    { grupo: 'Material de cubierta', tipo: 'unico', opciones: ['Melamina', 'Cuarzo', 'Granito', 'Piedra sinterizada', 'Madera maciza'] },
+    { grupo: 'Elementos', tipo: 'multiple', opciones: ['Mueble base', 'Mueble aéreo', 'Isla', 'Electrodomésticos empotrados'] },
+  ],
+  'Closets': [
+    { grupo: 'Material', tipo: 'unico', opciones: ['Melamina', 'Madera maciza'] },
+    { grupo: 'Tipo de puertas', tipo: 'unico', opciones: ['Puertas corredizas', 'Puertas abatibles'] },
+    { grupo: 'Características', tipo: 'multiple', opciones: ['Walk-in closet', 'Organizadores internos'] },
+  ],
+  'Baños / Vanitorios': [
+    { grupo: 'Material', tipo: 'unico', opciones: ['Melamina resistente a humedad', 'Cuarzo', 'Piedra sinterizada', 'Madera maciza'] },
+    { grupo: 'Características', tipo: 'multiple', opciones: ['Con lavamanos integrado', 'Espejo con luz'] },
+  ],
+  'Repisas': [
+    { grupo: 'Material', tipo: 'unico', opciones: ['Madera maciza', 'Melamina'] },
+    { grupo: 'Tipo', tipo: 'unico', opciones: ['Flotantes', 'Con soporte visible'] },
+  ],
+  'Restauración': [
+    { grupo: 'Trabajo a realizar', tipo: 'multiple', opciones: ['Barniz/laca', 'Cambio de tapiz', 'Reparación estructural', 'Pintura'] },
+  ],
+  'Carpintería general': [
+    { grupo: 'Material', tipo: 'unico', opciones: ['Madera maciza', 'Melamina', 'MDF'] },
+    { grupo: 'Tipo de trabajo', tipo: 'unico', opciones: ['Reparación', 'Trabajo a medida'] },
+  ],
+};
+const gruposGenericos = [
+  { grupo: 'Material', tipo: 'unico', opciones: ['Melamina', 'Madera maciza', 'A medida'] },
+];
+
 export default function SolicitarPage() {
   return (
     <Suspense fallback={<main className="wrap"><p>Cargando…</p></main>}>
@@ -35,6 +68,8 @@ function SolicitarWizard() {
     cliente_telefono: '',
     cliente_email: '',
   });
+  const [materialesSeleccionados, setMaterialesSeleccionados] = useState([]);
+  const [detallesAdicionales, setDetallesAdicionales] = useState('');
 
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState(null);
@@ -60,6 +95,24 @@ function SolicitarWizard() {
   function actualizarCampo(campo, valor) {
     setForm((f) => ({ ...f, [campo]: valor }));
   }
+
+  function toggleMaterial(opcion, grupoDef) {
+    setMaterialesSeleccionados((prev) => {
+      if (grupoDef.tipo === 'unico') {
+        // Solo puede haber una selección activa dentro de este grupo específico
+        const sinEsteGrupo = prev.filter((m) => !grupoDef.opciones.includes(m));
+        const yaEstabaElegida = prev.includes(opcion);
+        return yaEstabaElegida ? sinEsteGrupo : [...sinEsteGrupo, opcion];
+      }
+      // Grupo múltiple: se puede marcar y desmarcar libremente
+      return prev.includes(opcion) ? prev.filter((m) => m !== opcion) : [...prev, opcion];
+    });
+  }
+
+  const categoriaSeleccionada = categorias.find((c) => c.id === form.categoria_id);
+  const gruposMateriales = categoriaSeleccionada
+    ? (materialesPorCategoria[categoriaSeleccionada.nombre] || gruposGenericos)
+    : gruposGenericos;
 
   function siguiente() {
     if (paso === 1 && !form.categoria_id) {
@@ -122,11 +175,15 @@ function SolicitarWizard() {
 
     setEnviando(true);
 
-    // Generamos el ID nosotros mismos (en vez de pedirle a Supabase que
-    // nos devuelva la fila con .select()) — así evitamos necesitar
-    // permiso de LECTURA sobre la tabla, que por privacidad solo debe
-    // tenerlo el admin (no queremos que cualquiera pueda leer teléfonos
-    // y correos de otros clientes).
+    // Combinamos los materiales elegidos (chips) + el texto adicional
+    // en el mismo campo "descripcion" que ya existe en la base de datos
+    // — así no hace falta agregar columnas nuevas ni tocar el resto del
+    // sitio (panel del taller, admin, etc.) que ya lee ese campo.
+    const descripcionFinal = [
+      materialesSeleccionados.length > 0 ? materialesSeleccionados.join(', ') : null,
+      detallesAdicionales || null,
+    ].filter(Boolean).join(' — ');
+
     const nuevaSolicitudId = crypto.randomUUID();
 
     const { error: insertError } = await supabase
@@ -134,6 +191,7 @@ function SolicitarWizard() {
       .insert([{
         id: nuevaSolicitudId,
         ...form,
+        descripcion: descripcionFinal,
         telefono_verificado: telefonoVerificado,
         taller_id_directo: tallerIdDirecto || null,
       }]);
@@ -170,7 +228,7 @@ function SolicitarWizard() {
               tallerNombre: c.talleres.nombre,
               categoria: form.categoria_id,
               comuna: form.comuna,
-              descripcion: form.descripcion,
+              descripcion: descripcionFinal,
             }),
           }).catch(() => {});
         });
@@ -253,13 +311,33 @@ function SolicitarWizard() {
       {paso === 2 && (
         <div className="wizard-panel">
           <h2>Detalles del proyecto</h2>
-          <p className="hint">Mientras más precisa la descripción, mejores presupuestos recibirás.</p>
+          <p className="hint">Mientras más precisa la selección, mejores presupuestos recibirás.</p>
+          {gruposMateriales.map((grupo) => (
+            <div className="field" key={grupo.grupo}>
+              <label>
+                {grupo.grupo} <span style={{ fontWeight: 400, opacity: 0.5, fontSize: '0.78rem' }}>
+                  {grupo.tipo === 'unico' ? '(elige una opción)' : '(puedes elegir varias)'}
+                </span>
+              </label>
+              <div className="chip-row">
+                {grupo.opciones.map((m) => (
+                  <div
+                    key={m}
+                    className={`chip ${materialesSeleccionados.includes(m) ? 'selected' : ''}`}
+                    onClick={() => toggleMaterial(m, grupo)}
+                  >
+                    {m}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
           <div className="field">
-            <label>Describe tu proyecto</label>
+            <label>Otros detalles (opcional)</label>
             <textarea
-              value={form.descripcion}
-              onChange={(e) => actualizarCampo('descripcion', e.target.value)}
-              placeholder="Ej: Cocina en L de 4x2,5 m, con isla, melamina blanca…"
+              value={detallesAdicionales}
+              onChange={(e) => setDetallesAdicionales(e.target.value)}
+              placeholder="Ej: medidas aproximadas, color, algo que no esté en la lista de arriba…"
             />
           </div>
           <div className="field">
@@ -346,7 +424,8 @@ function SolicitarWizard() {
           <p className="hint">Puedes volver atrás para editar cualquier paso.</p>
           <div className="summary-box">
             <div className="summary-row"><span className="k">Categoría</span><span className="v">{categorias.find((c) => c.id === form.categoria_id)?.nombre || '—'}</span></div>
-            <div className="summary-row"><span className="k">Descripción</span><span className="v">{form.descripcion || '—'}</span></div>
+            <div className="summary-row"><span className="k">Materiales</span><span className="v">{materialesSeleccionados.join(', ') || '—'}</span></div>
+            <div className="summary-row"><span className="k">Otros detalles</span><span className="v">{detallesAdicionales || '—'}</span></div>
             <div className="summary-row"><span className="k">Comuna</span><span className="v">{form.comuna}</span></div>
             <div className="summary-row"><span className="k">Cuándo partir</span><span className="v">{form.urgencia}</span></div>
             <div className="summary-row"><span className="k">Nombre</span><span className="v">{form.cliente_nombre || '—'}</span></div>
