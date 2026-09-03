@@ -9,6 +9,14 @@ export default async function HomePage() {
     .select('*')
     .order('nombre');
 
+  const { data: talleresDestacados } = await supabase
+    .from('talleres')
+    .select('*')
+    .eq('estado', 'activo')
+    .order('destacado', { ascending: false })
+    .order('rating', { ascending: false })
+    .limit(3);
+
   const texturas = ['tex-1', 'tex-2', 'tex-3', 'tex-4', 'tex-5', 'tex-6'];
 
   // Fotos reales por categoría (conectadas por NOMBRE, no por id,
@@ -81,6 +89,55 @@ export default async function HomePage() {
       </section>
 
       <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
+        <h2>Cómo funciona</h2>
+        <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: 8 }}>Tres pasos, sin vueltas.</p>
+        <div className="steps-grid">
+          <div className="step-item">
+            <div className="step-number">1</div>
+            <h3>Cuéntanos qué necesitas</h3>
+            <p>Describe tu proyecto y tu comuna en el formulario, toma 2 minutos.</p>
+          </div>
+          <div className="step-item">
+            <div className="step-number">2</div>
+            <h3>Responden los que calzan</h3>
+            <p>Solo te contactan talleres verificados que trabajan tu categoría en tu zona.</p>
+          </div>
+          <div className="step-item">
+            <div className="step-number">3</div>
+            <h3>Compara y elige</h3>
+            <p>Revisa precios, reseñas y trabajos anteriores antes de decidir.</p>
+          </div>
+        </div>
+      </section>
+
+      {talleresDestacados?.length > 0 && (
+        <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
+          <h2>Talleres destacados</h2>
+          <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: 8 }}>
+            Con mejor calificación este mes.
+          </p>
+          <div className="pro-grid">
+            {talleresDestacados.map((t) => (
+              <a href={`/solicitar?taller=${t.id}`} className="pro-card" key={t.id}>
+                <div className="cover">
+                  {t.destacado && <div className="badge">Destacado</div>}
+                </div>
+                <div className="body">
+                  <h4>{t.nombre}</h4>
+                  <div className="stars">★ {t.rating || 0} ({t.cantidad_resenas || 0} reseñas)</div>
+                  <p className="specialty">{t.descripcion}</p>
+                  <div className="meta">
+                    <span>{t.comuna}</span>
+                    <span>Pedir presupuesto →</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
         <div className="cta-section">
           <div>
             <h2 style={{ marginBottom: 8 }}>¿Necesitas un mueble a medida?</h2>
@@ -99,3 +156,4 @@ export default async function HomePage() {
     </main>
   );
 }
+
