@@ -21,10 +21,35 @@ export default function RegistroPage() {
 
   if (cargando) return <main className="wrap"><p>Cargando…</p></main>;
 
+  if (!user) {
+    return (
+      <main className="wrap">
+        <div className="auth-layout">
+          <div>
+            <h1>Registrar mi taller</h1>
+            <LoginForm />
+          </div>
+          <div className="auth-side">
+            <div className="auth-side-photo">
+              <img src="/images/categoria-general.jpg" alt="Taller de carpintería" className="photo" />
+            </div>
+            <h3>¿Por qué unirte a TuGuíaMaestra?</h3>
+            <ul className="auth-benefits">
+              <li>Recibe solicitudes reales de clientes en tu comuna, sin salir a buscarlos.</li>
+              <li>Gratis mientras estamos en lanzamiento — no pagas nada por estar en el directorio.</li>
+              <li>Tú decides qué solicitudes aceptar, con el contacto oculto hasta que confirmes.</li>
+              <li>Aumenta tu visibilidad frente a talleres que solo dependen del boca a boca.</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="wrap">
       <h1>Registrar mi taller</h1>
-      {!user ? <LoginForm /> : <TallerForm user={user} />}
+      <TallerForm user={user} />
     </main>
   );
 }
