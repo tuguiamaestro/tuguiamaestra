@@ -6,16 +6,25 @@ import CategoriaIcon from '../components/CategoriaIcon';
 
 export default function RegistroPage() {
   const [user, setUser] = useState(null);
+  const [perfil, setPerfil] = useState(null);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    async function cargar() {
+      const { data } = await supabase.auth.getUser();
       setUser(data.user || null);
+      if (data.user) {
+        const { data: perfilData } = await supabase
+          .from('perfiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        setPerfil(perfilData || null);
+      }
       setCargando(false);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
+    }
+    cargar();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => cargar());
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -42,6 +51,22 @@ export default function RegistroPage() {
             </ul>
           </div>
         </div>
+      </main>
+    );
+  }
+
+  // Ya tiene sesión iniciada Y ya registró un taller antes — lo mandamos
+  // a su panel en vez de mostrarle el formulario de registro de nuevo
+  // (evita que registre un segundo taller por error).
+  if (perfil?.taller_id) {
+    return (
+      <main className="wrap">
+        <h1>Ya tienes un taller registrado</h1>
+        <p style={{ opacity: 0.7, maxWidth: '48ch' }}>
+          Esta cuenta ({user.email}) ya tiene un taller asociado. Ve a tu
+          panel para revisar tus solicitudes y el estado de tu perfil.
+        </p>
+        <a href="/panel"><button type="button" style={{ marginTop: 12 }}>Ir a mi panel →</button></a>
       </main>
     );
   }
