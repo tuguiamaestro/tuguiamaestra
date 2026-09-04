@@ -153,7 +153,23 @@ export default async function HomePage() {
           </a>
         </div>
       </section>
+
+      <section className="wrap" style={{ paddingTop: 0, paddingBottom: 64 }}>
+        <div className="cta-section" style={{ background: 'var(--ink)', color: 'var(--white)' }}>
+          <div>
+            <h2 style={{ marginBottom: 8, color: 'var(--white)' }}>¿Tienes un taller de muebles?</h2>
+            <p style={{ opacity: 0.75, maxWidth: '42ch', margin: 0 }}>
+              Súmate al directorio y recibe solicitudes de clientes reales en
+              tu comuna. Gratis mientras estamos en lanzamiento.
+            </p>
+          </div>
+          <a href="/registro">
+            <button type="button" className="btn-brass" style={{ padding: '16px 32px', fontSize: '1rem' }}>
+              Registrar mi taller →
+            </button>
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
-
