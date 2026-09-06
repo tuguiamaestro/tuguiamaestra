@@ -221,6 +221,15 @@ button.menu-toggle:hover { background: var(--paper-2) !important; transform: non
   display: flex; align-items: center; justify-content: center; font-size: 0.72rem; margin-top: 1px;
 }
 
+.cta-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.cta-card {
+  border-radius: var(--radius); padding: 40px 32px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  background: var(--paper-2);
+}
+.cta-card p { max-width: 34ch; }
+.cta-card-dark { background: var(--ink); color: var(--white); }
+
 .cta-section {
   display: flex; align-items: center; justify-content: space-between; gap: 30px;
   background: var(--paper-2); border-radius: var(--radius); padding: 40px 44px;
@@ -334,6 +343,7 @@ code { background: var(--paper-2); padding: 2px 7px; border-radius: 4px; font-si
 }
 
 @media (max-width: 860px) {
+  .cta-duo { grid-template-columns: 1fr; }
   .auth-layout { grid-template-columns: 1fr; gap: 32px; }
   .auth-side { order: -1; }
   .steps-grid { grid-template-columns: 1fr; }
