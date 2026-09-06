@@ -61,7 +61,7 @@ export default async function HomePage() {
       </section>
 
       <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
-        <h2>Categorías</h2>
+        <h2>Talleres por categoría</h2>
         <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Elige por tipo de mueble.</p>
 
         {error && (
@@ -91,33 +91,16 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
-        <div className="cta-duo">
-          <div className="cta-card">
-            <h2 style={{ marginBottom: 8 }}>¿Necesitas un mueble a medida?</h2>
-            <p style={{ opacity: 0.65, margin: 0 }}>
-              Cuéntanos qué necesitas en 2 minutos y te contactan los talleres
-              que de verdad calzan con tu proyecto. Es gratis.
-            </p>
-            <a href="/solicitar">
-              <button type="button" style={{ padding: '14px 28px' }}>
-                Pedir presupuesto →
-              </button>
-            </a>
-          </div>
-
-          <div className="cta-card cta-card-dark">
-            <h2 style={{ marginBottom: 8, color: 'var(--white)' }}>¿Tienes un taller de muebles?</h2>
-            <p style={{ opacity: 0.75, margin: 0 }}>
-              Súmate al directorio y recibe solicitudes de clientes reales en
-              tu comuna. Gratis mientras estamos en lanzamiento.
-            </p>
-            <a href="/registro">
-              <button type="button" className="btn-brass" style={{ padding: '14px 28px' }}>
-                Registrar mi taller →
-              </button>
-            </a>
-          </div>
+      <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 40, paddingBottom: 40 }}>
+        <div className="cta-slim">
+          <h2 style={{ color: 'var(--white)', marginBottom: 8 }}>¿Tienes un taller de muebles?</h2>
+          <p style={{ opacity: 0.75, margin: '0 auto 18px' }}>
+            Súmate al directorio y recibe solicitudes de clientes reales en
+            tu comuna. Gratis mientras estamos en lanzamiento.
+          </p>
+          <a href="/registro">
+            <button type="button" className="btn-brass">Registrar mi taller →</button>
+          </a>
         </div>
       </section>
 
