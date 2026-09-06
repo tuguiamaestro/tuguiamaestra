@@ -41,10 +41,13 @@ export default async function HomePage() {
             baños— con talleres y carpinteros verificados de Santiago. Pides
             presupuesto una vez y responden los que de verdad calzan.
           </p>
-          <form action="/listado" method="get" className="search-box">
+          <form action="/solicitar" method="get" className="search-box">
             <input type="text" name="q" placeholder="¿Qué necesitas? Ej: cocina, closet, restauración…" />
-            <button type="submit" className="btn-brass">Buscar</button>
+            <button type="submit" className="btn-brass">Pedir presupuesto</button>
           </form>
+          <p style={{ marginTop: 14, fontSize: '0.82rem', opacity: 0.55 }}>
+            ¿Prefieres ver el listado de talleres primero? <a href="/listado">Ver profesionales →</a>
+          </p>
         </div>
         <div className="hero-visual">
           <div className="grain-card a">
