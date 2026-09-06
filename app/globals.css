@@ -230,6 +230,12 @@ button.menu-toggle:hover { background: var(--paper-2) !important; transform: non
 .cta-card p { max-width: 34ch; }
 .cta-card-dark { background: var(--ink); color: var(--white); }
 
+.cta-slim {
+  background: var(--ink); border-radius: var(--radius); padding: 28px 32px;
+  text-align: center; max-width: 560px; margin: 0 auto;
+}
+.cta-slim p { font-size: 0.9rem; }
+
 .cta-section {
   display: flex; align-items: center; justify-content: space-between; gap: 30px;
   background: var(--paper-2); border-radius: var(--radius); padding: 40px 44px;
