@@ -94,7 +94,7 @@ export default async function HomePage() {
       <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 40, paddingBottom: 40 }}>
         <div className="cta-slim">
           <h2 style={{ color: 'var(--white)', marginBottom: 8 }}>¿Tienes un taller de muebles?</h2>
-          <p style={{ opacity: 0.75, margin: '0 auto 18px' }}>
+          <p style={{ color: 'var(--white)', opacity: 0.75, margin: '0 auto 18px' }}>
             Súmate al directorio y recibe solicitudes de clientes reales en
             tu comuna. Gratis mientras estamos en lanzamiento.
           </p>
