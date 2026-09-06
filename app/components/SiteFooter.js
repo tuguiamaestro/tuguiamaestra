@@ -22,6 +22,10 @@ export default function SiteFooter() {
             <a href="/planes" style={{ display: 'block', fontSize: '0.85rem', opacity: 0.7, marginBottom: 8 }}>Planes</a>
             <a href="/registro" style={{ display: 'block', fontSize: '0.85rem', opacity: 0.7 }}>Registrar mi taller</a>
           </div>
+          <div>
+            <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.45, fontWeight: 700, marginBottom: 12 }}>Ayuda</div>
+            <a href="/contacto" style={{ display: 'block', fontSize: '0.85rem', opacity: 0.7 }}>Contacto</a>
+          </div>
         </div>
       </div>
       <div className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 20, paddingBottom: 20, fontSize: '0.78rem', opacity: 0.5 }}>
