@@ -137,37 +137,33 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48 }}>
-        <div className="cta-section">
-          <div>
+      <section className="wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 48, paddingBottom: 64 }}>
+        <div className="cta-duo">
+          <div className="cta-card">
             <h2 style={{ marginBottom: 8 }}>¿Necesitas un mueble a medida?</h2>
-            <p style={{ opacity: 0.65, maxWidth: '42ch', margin: 0 }}>
+            <p style={{ opacity: 0.65, margin: 0 }}>
               Cuéntanos qué necesitas en 2 minutos y te contactan los talleres
               que de verdad calzan con tu proyecto. Es gratis.
             </p>
+            <a href="/solicitar">
+              <button type="button" style={{ padding: '14px 28px' }}>
+                Pedir presupuesto →
+              </button>
+            </a>
           </div>
-          <a href="/solicitar">
-            <button type="button" style={{ padding: '16px 32px', fontSize: '1rem' }}>
-              Pedir presupuesto →
-            </button>
-          </a>
-        </div>
-      </section>
 
-      <section className="wrap" style={{ paddingTop: 0, paddingBottom: 64 }}>
-        <div className="cta-section" style={{ background: 'var(--ink)', color: 'var(--white)' }}>
-          <div>
+          <div className="cta-card cta-card-dark">
             <h2 style={{ marginBottom: 8, color: 'var(--white)' }}>¿Tienes un taller de muebles?</h2>
-            <p style={{ opacity: 0.75, maxWidth: '42ch', margin: 0 }}>
+            <p style={{ opacity: 0.75, margin: 0 }}>
               Súmate al directorio y recibe solicitudes de clientes reales en
               tu comuna. Gratis mientras estamos en lanzamiento.
             </p>
+            <a href="/registro">
+              <button type="button" className="btn-brass" style={{ padding: '14px 28px' }}>
+                Registrar mi taller →
+              </button>
+            </a>
           </div>
-          <a href="/registro">
-            <button type="button" className="btn-brass" style={{ padding: '16px 32px', fontSize: '1rem' }}>
-              Registrar mi taller →
-            </button>
-          </a>
         </div>
       </section>
     </main>
