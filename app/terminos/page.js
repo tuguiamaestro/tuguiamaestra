@@ -70,7 +70,8 @@ export default function TerminosPage() {
         <h3 style={{ marginBottom: 10 }}>7. Contacto</h3>
         <p style={{ fontSize: '0.92rem', lineHeight: 1.75, opacity: 0.82 }}>
           Para dudas, reclamos o solicitudes relacionadas con tus datos,
-          escríbenos a <strong>contacto@tuguiamaestra.cl</strong>.
+          escríbenos a <strong>contacto@tuguiamaestra.cl</strong> o usa
+          nuestra <a href="/contacto">página de Contacto</a>.
         </p>
       </div>
     </main>
