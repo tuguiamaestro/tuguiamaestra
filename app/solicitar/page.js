@@ -41,6 +41,18 @@ const gruposGenericos = [
   { grupo: 'Material', tipo: 'unico', opciones: ['Melamina', 'Madera maciza', 'A medida'] },
 ];
 
+// Palabras clave para adivinar la categoría a partir de lo que alguien
+// escribe en el buscador del hero (no es exacto, solo un punto de partida
+// — el cliente igual puede cambiarla en el paso 1 si no adivinamos bien).
+const palabrasClavePorCategoria = {
+  'Cocinas': ['cocina'],
+  'Closets': ['closet', 'clóset', 'ropero'],
+  'Baños / Vanitorios': ['baño', 'vanitorio', 'lavamanos'],
+  'Repisas': ['repisa', 'estante'],
+  'Restauración': ['restaura', 'silla', 'mesa antigua', 'barniz'],
+  'Carpintería general': ['carpinter', 'reparaci', 'a medida'],
+};
+
 export default function SolicitarPage() {
   return (
     <Suspense fallback={<main className="wrap"><p>Cargando…</p></main>}>
@@ -84,7 +96,26 @@ function SolicitarWizard() {
 
   useEffect(() => {
     supabase.from('categorias').select('*').order('nombre').then(({ data }) => {
-      if (data) setCategorias(data);
+      if (data) {
+        setCategorias(data);
+
+        // Si venimos del buscador del hero (con ?q=algo), intentamos
+        // adivinar la categoría según lo que la persona escribió.
+        const busqueda = searchParams.get('q');
+        if (busqueda) {
+          const textoBusqueda = busqueda.toLowerCase();
+          const nombreEncontrado = Object.entries(palabrasClavePorCategoria).find(([, palabras]) =>
+            palabras.some((palabra) => textoBusqueda.includes(palabra))
+          )?.[0];
+          const categoriaCoincidente = data.find((c) => c.nombre === nombreEncontrado);
+          if (categoriaCoincidente) {
+            setForm((f) => ({ ...f, categoria_id: categoriaCoincidente.id }));
+          }
+          // Guardamos igual lo que escribió como punto de partida en
+          // "Otros detalles", se pierda o no la categoría adivinada.
+          setDetallesAdicionales(busqueda);
+        }
+      }
     });
     if (tallerIdDirecto) {
       supabase.from('talleres').select('id, nombre').eq('id', tallerIdDirecto).single()
