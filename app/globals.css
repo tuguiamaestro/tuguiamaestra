@@ -157,7 +157,7 @@ button.menu-toggle:hover { background: var(--paper-2) !important; transform: non
 .opt-card .cat-icon { width: 26px; height: 26px; margin-bottom: 8px; vertical-align: 0; }
 
 /* ---------- swatches (categorias en el home) ---------- */
-.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 18px; margin-top: 28px; }
+.swatch-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-top: 28px; }
 .swatch {
   border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--white);
   text-decoration: none; color: inherit; display: block; box-shadow: var(--shadow-sm);
@@ -343,6 +343,7 @@ code { background: var(--paper-2); padding: 2px 7px; border-radius: 4px; font-si
 }
 
 @media (max-width: 860px) {
+  .swatch-grid { grid-template-columns: repeat(3, 1fr); }
   .cta-duo { grid-template-columns: 1fr; }
   .auth-layout { grid-template-columns: 1fr; gap: 32px; }
   .auth-side { order: -1; }
@@ -355,4 +356,8 @@ code { background: var(--paper-2); padding: 2px 7px; border-radius: 4px; font-si
   .header-desktop-nav { display: none; }
   button.menu-toggle { display: flex; }
   .top-bar p { font-size: 0.74rem; }
+}
+
+@media (max-width: 520px) {
+  .swatch-grid { grid-template-columns: repeat(2, 1fr); }
 }
