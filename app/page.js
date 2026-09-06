@@ -45,7 +45,7 @@ export default async function HomePage() {
             <input type="text" name="q" placeholder="¿Qué necesitas? Ej: cocina, closet, restauración…" />
             <button type="submit" className="btn-brass">Pedir presupuesto</button>
           </form>
-          <p style={{ marginTop: 14, fontSize: '0.82rem', opacity: 0.55 }}>
+          <p style={{ marginTop: 14, fontSize: '0.92rem', opacity: 0.65 }}>
             ¿Prefieres ver el listado de talleres primero? <a href="/listado">Ver profesionales →</a>
           </p>
         </div>
