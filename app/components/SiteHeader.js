@@ -30,7 +30,7 @@ export default function SiteHeader() {
 
       <header className="site-header">
         <a href="/" className="logo">
-          <img src="/images/logo-icon.png" alt="TuGuíaMaestra" width="26" height="26" style={{ objectFit: 'contain' }} />
+          <img src="/images/logo-icon.png" alt="TuGuíaMaestra" width="34" height="34" style={{ objectFit: 'contain' }} />
           TuGuíaMaestra
         </a>
 
