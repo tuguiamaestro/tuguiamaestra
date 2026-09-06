@@ -126,7 +126,7 @@ button.menu-toggle:hover { background: var(--paper-2) !important; transform: non
 .swatch, .pro-card, .cat-card { animation: fadeUp 0.4s ease both; }
 
 /* ---------- hero ---------- */
-.hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 64px; align-items: center; padding: 76px 0; }
+.hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 64px; align-items: center; padding-top: 76px; padding-bottom: 76px; }
 .eyebrow {
   font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em;
   color: var(--wood-dark); font-weight: 700; opacity: 0.8;
